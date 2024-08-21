@@ -1,0 +1,119 @@
+	@import url('https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,100..900;1,100..900&family=Manrope:wght@200..800&family=Quicksand:wght@300..700&display=swap');
+
+	@font-face {
+		font-family: 'freiburgin_line_personal_use';
+		src: url('../font/freiburginlinepersonaluse-r9kwe-webfont.woff2') format('woff2'),
+			url('../font/freiburginlinepersonaluse-r9kwe-webfont.woff') format('woff');
+		font-weight: normal;
+		font-style: normal;
+
+	}
+
+	*{box-sizing: border-box;}
+
+	:root {
+		/* Définition des couleurs */
+		--green: #61C53E;
+		--greencompo:#62c53eb6;
+		--black: #151415;
+		--white: #FAFAFA;
+		--gris:  #E0DFDF;
+		--grisclair: #f0efef;
+		--titrehero: 100px;
+		--titre: 50px;
+		--soustitre: 26px;
+		--soustitre2: 20px;
+		--text: 16px;
+		--titreheromobil: 50px;
+		--titremobil: 32px;
+		--soustitremobil: 18px;
+		--textmobil: 14px;
+
+  	}
+
+	body{
+		text-align: center;
+		margin: 0 auto;
+		font-family: "Manrope", sans-serif;
+		font-weight: 400;
+		color: var(--black);
+		background-color: var(--white);
+	}
+
+	h3,h4,p{
+		color: var(--black);
+	}
+
+	h1,h2{
+		font-family: "freiburgin_line_personal_use", sans-serif;	
+		font-weight: 400;
+		background: linear-gradient(-180deg,rgba(97, 197, 62, 1) 0%, rgba(25, 127, 60, 1) 100%);
+		background-clip: text;
+		-webkit-background-clip: text;
+		color: transparent;
+	}
+
+	h1 {
+		font-size: var(--titreheromobil);
+	}
+
+	h2{
+		font-size: var(--titremobil);
+		margin-top: 10px;
+	}
+
+	h3,h4{
+		font-size: var(--soustitremobil);
+	}
+
+	p, label, a, button{
+		font-size: var(--textmobil);
+	}
+
+	.imgicon, .imgsection{
+		height: 10vh;
+	}
+
+	img.logo {
+		width: 10vw; 
+	}
+
+	.logo{
+		position: absolute;
+		top: 2vh;
+		left: 3%;
+	}
+
+
+	@media (min-width: 768px) {
+		h1 {
+			font-size: var(--titrehero);
+		}
+	
+		h2{
+			font-size: var(--titre);
+			margin-top: 10px;
+		}
+	
+		h3{
+			font-size: var(--soustitre);
+		}
+	
+		h4, nav a, a.deconnexion{
+			font-size: var(--soustitre2);
+		}
+	
+		p, label, a{
+			font-size: var(--text);
+		}
+
+		.imgicon, .imgsection{
+			height: 15vh;
+		}
+	
+		img.logo {
+			width: 3vw; 
+		}
+	}
+
+	
