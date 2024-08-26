@@ -9,7 +9,7 @@ const pool = mysql.createPool({
     // database: 'kick_league_db',
     // port: 3307,
     // remote
-    host: 'pma.techniques-graphiques.be',
+    host: '109.234.160.137',
     user: 'uhti7837_fabio',
     password: 'L9Ul__C!Fh1%',
     database: 'uhti7837_fabio',
