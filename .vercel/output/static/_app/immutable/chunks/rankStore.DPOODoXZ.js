@@ -1,1 +1,0 @@
-import{w as e}from"./entry.DXWqRFhg.js";const a=e(0);function t(r){return r<100?"Réserve":r<200?"Remplaçant":r<300?"Titulaire":r<400?"Pro":r<500?"Star":r<600?"Prime":"G.O.A.T"}const u=e(t(0));a.subscribe(r=>{u.set(t(r))});export{a as p,u as r};
