@@ -9,10 +9,11 @@ const pool = mysql.createPool({
     // database: 'kick_league_db',
     // port: 3307,
     // remote
-    host: '109.234.160.137',
-    user: 'uhti7837_fabio',
-    password: 'L9Ul__C!Fh1%',
-    database: 'uhti7837_fabio',
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    port: process.env.DB_PORT || 3306,
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
