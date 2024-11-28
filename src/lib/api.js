@@ -2,7 +2,7 @@ import clubIds from '$lib/clubMappings';
 import countryMappings from '$lib/paysMappings';
 
 // Constantes pour le proxy, l'ID de la ligue et la saison courante
-const PROXY_URL = 'http://localhost:3000/api';
+const PROXY_URL = 'https://kickleague-sveltekit.onrender.com/api';
 const LEAGUE_ID = '94';
 const season = 2023;
 
