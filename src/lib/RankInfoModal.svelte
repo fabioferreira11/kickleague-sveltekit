@@ -12,7 +12,7 @@
 <button class="modal-background" on:click={close}>
     <button class="modal-rank-info" on:click|stopPropagation>
         <p>Vous êtes ici dans la mine d'informations sur les ranks ! Découvrez précisément combien de points sont requis pour passer au niveau supérieur et planifiez votre montée vers la gloire.</p>
-        <img class="illu-rank" src="../static/img/illu-modalrank.png" alt="">
+        <img class="illu-rank" src="../img/illu-modalrank.png" alt="">
     </button>
 </button>
 {/if}

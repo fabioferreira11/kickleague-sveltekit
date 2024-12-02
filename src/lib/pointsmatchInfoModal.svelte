@@ -20,41 +20,41 @@
                     <h3>buts : 30 points</h3>
                 </div>
                 <div class="maniere">
-                    <img src="../static/img/passed.png" alt="">
+                    <img src="../img/passed.png" alt="">
                     <h3>passe désicive : 20 points</h3>
                 </div>
                 <div class="maniere">
-                    <img src="../static/img/tir-cadre.png" alt="">
+                    <img src="../img/tir-cadre.png" alt="">
                     <h3>tirs cadrés : 3 points</h3>
                 </div>
                 <div class="maniere">
-                    <img src="../static/img/tir.png" alt="">
+                    <img src="../img/tir.png" alt="">
                     <h3>tir : 1 points</h3>
                 </div>
                 <div class="maniere">
-                    <img src="../static/img/arbitre.png" alt="">
+                    <img src="../img/arbitre.png" alt="">
                     <h3>faute : 2 points</h3>
                 </div>
             </div>
             <div class="collone-2-positif">
                 <div class="maniere">
-                    <img src="../static/img/interception.png" alt="">
+                    <img src="../img/interception.png" alt="">
                     <h3>interception : 2 points</h3>
                 </div>
                 <div class="maniere">
-                    <img src="../static/img/tacle.png" alt="">
+                    <img src="../img/tacle.png" alt="">
                     <h3>tacle décisif : 10 points</h3>
                 </div>
                 <div class="maniere">
-                    <img src="../static/img/penalty.png" alt="">
+                    <img src="../img/penalty.png" alt="">
                     <h3>penalty obtenu : 10 points</h3>
                 </div>
                 <div class="maniere">
-                    <img src="../static/img/arret-peno.png" alt="">
+                    <img src="../img/arret-peno.png" alt="">
                     <h3>arreter un penalty : 30 points</h3>
                 </div>
                 <div class="maniere">
-                    <img src="../static/img/clean-sheet.png" alt="">
+                    <img src="../img/clean-sheet.png" alt="">
                     <h3>clean sheet : 15 points</h3>
                 </div>
             </div>
@@ -63,33 +63,33 @@
          <section class="points-negatif">
             <div class="collone-1-negatif">
                 <div class="maniere">
-                    <img src="../static/img/arbitre.png" alt="">
+                    <img src="../img/arbitre.png" alt="">
                     <h3>faute : 2 points</h3>
                 </div>
                 <div class="maniere">
-                    <img src="../static/img/carte-jaune.png" alt="">
+                    <img src="../img/carte-jaune.png" alt="">
                     <h3>carton jaune : 10 points</h3>
                 </div>
                 <div class="maniere">
-                    <img src="../static/img/carte-jaune.png" alt="">
+                    <img src="../img/carte-jaune.png" alt="">
                     <h3>carton rouge : 25 points</h3>
                 </div>
                 <div class="maniere">
-                    <img src="../static/img/penalty-commis.png" alt="">
+                    <img src="../img/penalty-commis.png" alt="">
                     <h3>penalty commis : 10 points</h3>
                 </div>
             </div>
             <div class="collone-2-negatif">
                 <div class="maniere">
-                    <img src="../static/img/penalty-rate.png" alt="">
+                    <img src="../img/penalty-rate.png" alt="">
                     <h3>penalty raté : 15 points</h3>
                 </div>
                 <div class="maniere">
-                    <img src="../static/img/goal-concede.png" alt="">
+                    <img src="../img/goal-concede.png" alt="">
                     <h3>goal concédé : 8 points</h3>
                 </div>
                 <div class="maniere">
-                    <img src="../static/img/faute-grave.png" alt="">
+                    <img src="../img/faute-grave.png" alt="">
                     <h3>Erreur importante : 15 points</h3>
                 </div>
             </div>
