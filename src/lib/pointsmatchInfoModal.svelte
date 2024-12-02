@@ -16,7 +16,7 @@
          <section class="points-positif">
             <div class="collone-1-positif">
                 <div class="maniere">
-                    <img src="../static/img/buts.png" alt="">
+                    <img src="../img/buts.png" alt="">
                     <h3>buts : 30 points</h3>
                 </div>
                 <div class="maniere">
