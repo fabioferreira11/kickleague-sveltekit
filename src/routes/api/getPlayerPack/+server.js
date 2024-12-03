@@ -5,14 +5,12 @@ import countryMappings from '$lib/paysMappings';  // Importation des mappages de
 
 // Fonction pour vérifier si un joueur existe déjà dans la base de données, sinon l'insérer
 async function ensurePlayerExists(player) {
-    console.time('Check existing players');
     const existingPlayer = await mysqlDatabase.query('SELECT id FROM players WHERE id = ?', [player.player.id]);
     if (existingPlayer.length === 0) {
         await mysqlDatabase.query('INSERT INTO players (id, nom, photo_url, position, age, club, pays) VALUES (?, ?, ?, ?, ?, ?, ?)', [
             player.player.id, player.player.name, player.player.photo, player.statistics[0].games.position, player.player.age, player.statistics[0].team.name, player.player.nationality
         ]);
     }
-    console.timeEnd('Check existing players');
 }
 
 // Fonction pour récupérer les joueurs déjà assignés à un utilisateur spécifique
@@ -64,31 +62,20 @@ export async function POST({ request }) {
         }
 
         // Récupère les détails du club et du pays de l'utilisateur
-        console.time('Fetch user details');
         const userDetails = await mysqlDatabase.query('SELECT club, pays FROM users WHERE id = ?', [userId]);
         if (userDetails.length === 0) {
             return error(404, "User not found");
         }
-        console.timeEnd('Fetch user details');
 
         const { club, pays } = userDetails[0];
-        console.time('Synchronize players');
         await synchronizePlayers(new Date().getFullYear());  // Synchronisation des joueurs pour l'année en cours
-        console.timeEnd('Synchronize players');
 
         // Récupère tous les joueurs de la Primeira Liga pour l'année en cours
-        console.time('Fetch players from Primeira Liga');
         const allPlayers = await getPlayersFromPrimeiraLiga(94, new Date().getFullYear());
-        console.timeEnd('Fetch players from Primeira Liga');
-        console.time('Filter players by club');
         const clubPlayers = await getPlayersByClub(club, new Date().getFullYear());
-        console.timeEnd('Filter players by club');
-        console.time('Filter players by country');
         const countryPlayers = filterPlayersByCountry(allPlayers, countryMappings[pays.toLowerCase()]);
-        console.timeEnd('Filter players by country');
 
         const positions = ['Goalkeeper', 'Defender', 'Midfielder', 'Attacker'];
-        console.time('Select players by position');
         let selectedPlayers = [];
 
         // Sélectionne les joueurs par position en fonction du club et du pays
@@ -100,13 +87,10 @@ export async function POST({ request }) {
 
             selectedPlayers.push(...fromClub, ...fromCountry, ...additionalPlayers);
         }
-        console.timeEnd('Select players by position');
 
         // Assigne les joueurs sélectionnés à l'utilisateur et les retourne en réponse
-        console.time('Assign welcome pack players');
         await assignWelcomePackPlayers(userId, selectedPlayers.slice(0, 8));
         return json({ selectedPlayers: selectedPlayers.slice(0, 8) });
-        console.timeEnd('Assign welcome pack players');
     } catch (error) {
         console.error("Error processing player pack request:", error);
         return json({ message: 'Internal Error' }, { status: 500 });
