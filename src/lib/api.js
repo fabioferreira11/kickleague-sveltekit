@@ -66,28 +66,38 @@ export async function getPlayerData(playerId, season) {
 
 // Fonction utilitaire pour récupérer les joueurs en fonction d'une requête
 async function fetchPlayersByQuery(query) {
-    let allPlayers = [];
-    let page = 1;
-    let hasMore = true;
     console.log(`Starting fetch query: ${query}`);
-    const limit = 100; // Augmenter la taille de la page si l'API le permet
-    while (hasMore) {
-        const url = `${PROXY_URL}/players?${query}&page=${page}&limit=${limit}`;
-        const data = await fetchAPI(url);
-        if (data.response) {
-            allPlayers = allPlayers.concat(data.response);
-            console.log(`Page ${page}: ${data.response.length} players fetched`);
-            hasMore = data.paging.current < data.paging.total;
-            page++;
-        } else {
-            console.log(`No more data available after page ${page}`);
-            hasMore = false;
-        }
+
+    // Appelle l'API une fois pour déterminer le nombre total de pages
+    const firstPageUrl = `${PROXY_URL}/players?${query}&page=1`;
+    const firstPageData = await fetchAPI(firstPageUrl);
+
+    if (!firstPageData.response) {
+        console.error("No data found in the first page response.");
+        return [];
     }
+
+    const totalPages = firstPageData.paging.total;
+    console.log(`Total pages to fetch: ${totalPages}`);
+
+    // Prépare les URLs pour toutes les pages
+    const fetchPromises = [];
+    for (let page = 1; page <= totalPages; page++) {
+        const url = `${PROXY_URL}/players?${query}&page=${page}`;
+        fetchPromises.push(fetchAPI(url));
+    }
+
+    // Charge toutes les pages en parallèle
+    const results = await Promise.all(fetchPromises);
+
+    // Combine les données de toutes les pages
+    const allPlayers = results
+        .filter(result => result.response)
+        .flatMap(result => result.response);
+
     console.log(`Total players fetched with query ${query}: ${allPlayers.length}`);
     return allPlayers;
 }
-
 
 // Fonction pour filtrer les joueurs par pays
 export function filterPlayersByCountry(players, country) {
