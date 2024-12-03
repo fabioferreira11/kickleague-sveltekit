@@ -64,11 +64,16 @@ export async function getPlayerData(playerId, season) {
     }
 }
 
+// Fonction pour ajouter du delay entre deux appels API
+function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 // Fonction utilitaire pour récupérer les joueurs en fonction d'une requête
 async function fetchPlayersByQuery(query) {
     console.log(`Starting fetch query: ${query}`);
 
-    // Appelle l'API une fois pour déterminer le nombre total de pages
+    // Appelle la première page pour déterminer le nombre total de pages
     const firstPageUrl = `${PROXY_URL}/players?${query}&page=1`;
     const firstPageData = await fetchAPI(firstPageUrl);
 
@@ -77,23 +82,27 @@ async function fetchPlayersByQuery(query) {
         return [];
     }
 
-    const totalPages = firstPageData.paging.total;
+    const totalPages = firstPageData.paging.total; // Nombre total de pages à parcourir
     console.log(`Total pages to fetch: ${totalPages}`);
 
-    // Prépare les URLs pour toutes les pages
-    const fetchPromises = [];
+    const allPlayers = [];
+
     for (let page = 1; page <= totalPages; page++) {
         const url = `${PROXY_URL}/players?${query}&page=${page}`;
-        fetchPromises.push(fetchAPI(url));
+        
+        // Récupère les données pour la page courante
+        const data = await fetchAPI(url);
+
+        if (data.response) {
+            allPlayers.push(...data.response);
+            console.log(`Page ${page}: ${data.response.length} players fetched`);
+        } else {
+            console.warn(`Failed to fetch page ${page}`);
+        }
+
+        // Ajoute un délai de 200ms entre les appels
+        await delay(200);
     }
-
-    // Charge toutes les pages en parallèle
-    const results = await Promise.all(fetchPromises);
-
-    // Combine les données de toutes les pages
-    const allPlayers = results
-        .filter(result => result.response)
-        .flatMap(result => result.response);
 
     console.log(`Total players fetched with query ${query}: ${allPlayers.length}`);
     return allPlayers;
