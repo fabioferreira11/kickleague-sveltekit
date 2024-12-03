@@ -1,4 +1,3 @@
-import db from '$lib/mysqlDatabase';
 import clubIds from '$lib/clubMappings';
 import countryMappings from '$lib/paysMappings';
 
@@ -65,65 +64,27 @@ export async function getPlayerData(playerId, season) {
     }
 }
 
-/// Fonction pour interroger la base de données
-async function fetchPlayersFromDatabase(query) {
-    console.log(`Fetching players from database with query: ${query}`);
-    let sql = 'SELECT * FROM players';
-    const queryParams = [];
-
-    if (query.includes('season')) {
-        sql += ' WHERE season = ?';
-        queryParams.push(query.split('season=')[1].split('&')[0]);
-    }
-
-    try {
-        const results = await db.query(sql, queryParams);
-        console.log(`Players fetched from database: ${results.length}`);
-        return results;
-    } catch (error) {
-        console.error('Error fetching players from database:', error);
-        throw error;
-    }
-}
-
 // Fonction utilitaire pour récupérer les joueurs en fonction d'une requête
 async function fetchPlayersByQuery(query) {
-    console.log(`Fetching players with query: ${query}`);
-    try {
-        const players = await fetchPlayersFromDatabase(query);
-        return players.map(player => ({
-            player: {
-                id: player.id,
-                name: player.nom,
-                photo: player.photo_url,
-                position: player.position,
-                age: player.age,
-                nationality: player.pays, // Utilise directement le nom du pays
-            },
-            statistics: [
-                {
-                    team: {
-                        name: player.club, // Utilise directement le nom du club
-                    },
-                },
-            ],
-        }));
-    } catch (error) {
-        console.error("Error fetching players by query:", error);
-        return [];
+    let allPlayers = [];
+    let page = 1;
+    let hasMore = true;
+    console.log(`Starting fetch query: ${query}`);
+    while (hasMore) {
+        const url = `${PROXY_URL}/players?${query}&page=${page}`;
+        const data = await fetchAPI(url);
+        if (data.response) {
+            allPlayers = allPlayers.concat(data.response);
+            console.log(`Page ${page}: ${data.response.length} players fetched`);
+            hasMore = data.paging.current < data.paging.total;
+            page++;
+        } else {
+            console.log(`No more data available after page ${page}`);
+            hasMore = false;
+        }
     }
-}
-
-// Fonction pour obtenir les joueurs d'un club spécifique pour une saison donnée
-export async function getPlayersByClub(clubName, season) {
-    console.log(`Fetching players for club ${clubName}`);
-    return await fetchPlayersByQuery(`team=${clubName}&season=${season}`);
-}
-
-// Fonction pour obtenir les joueurs de la ligue portugaise pour une saison donnée
-export async function getPlayersFromPrimeiraLiga(leagueId, season) {
-    console.log(`Fetching players from Primeira Liga for season ${season}`);
-    return await fetchPlayersByQuery(`league=${leagueId}&season=${season}`);
+    console.log(`Total players fetched with query ${query}: ${allPlayers.length}`);
+    return allPlayers;
 }
 
 // Fonction pour filtrer les joueurs par pays
@@ -142,7 +103,9 @@ export async function selectPlayersByPosition(players, position, count) {
         return [];
     }
     const selected = players.filter(player => 
-        player.player.position === position
+        player.statistics && player.statistics.length > 0 && 
+        player.statistics[0].games && 
+        player.statistics[0].games.position === position
     ).slice(0, count);
     console.log(`Selected ${selected.length} players for position ${position}`);
     return selected;
