@@ -7,7 +7,7 @@ const LEAGUE_ID = '94';
 const season = 2023;
 
 // Durée de vie du cache en millisecondes
-const CACHE_TTL = 60 * 1000; // 60 secondes
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 const localCache = new Map(); // Cache local en mémoire
 
 // Fonction pour stocker les données dans le cache avec expiration
@@ -28,11 +28,12 @@ function getCache(url) {
 
 // Fonction utilitaire pour effectuer une requête API via un proxy
 async function fetchAPI(url) {
-    console.log(`Fetching URL: ${url}`);
-    const cachedData = getCache(url); // Vérifie si les données sont dans le cache
+    const cachedData = getCache(url);
     if (cachedData) {
         console.log(`Cache hit for URL: ${url}`);
         return cachedData;
+    } else {
+        console.log(`Cache miss for URL: ${url}`);
     }
 
     try {
