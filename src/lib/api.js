@@ -70,8 +70,9 @@ async function fetchPlayersByQuery(query) {
     let page = 1;
     let hasMore = true;
     console.log(`Starting fetch query: ${query}`);
+    const limit = 100; // Augmenter la taille de la page si l'API le permet
     while (hasMore) {
-        const url = `${PROXY_URL}/players?${query}&page=${page}`;
+        const url = `${PROXY_URL}/players?${query}&page=${page}&limit=${limit}`;
         const data = await fetchAPI(url);
         if (data.response) {
             allPlayers = allPlayers.concat(data.response);
@@ -86,6 +87,7 @@ async function fetchPlayersByQuery(query) {
     console.log(`Total players fetched with query ${query}: ${allPlayers.length}`);
     return allPlayers;
 }
+
 
 // Fonction pour filtrer les joueurs par pays
 export function filterPlayersByCountry(players, country) {
