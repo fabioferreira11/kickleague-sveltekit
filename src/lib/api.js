@@ -6,19 +6,46 @@ const PROXY_URL = 'https://kickleague-sveltekit.onrender.com/api';
 const LEAGUE_ID = '94';
 const season = 2023;
 
+// Durée de vie du cache en millisecondes
+const CACHE_TTL = 60 * 1000; // 60 secondes
+const localCache = new Map(); // Cache local en mémoire
+
+// Fonction pour stocker les données dans le cache avec expiration
+function setCache(url, data) {
+    const expiry = Date.now() + CACHE_TTL;
+    localCache.set(url, { data, expiry });
+}
+
+// Fonction pour récupérer les données du cache
+function getCache(url) {
+    const cached = localCache.get(url);
+    if (cached && cached.expiry > Date.now()) {
+        return cached.data; // Données valides
+    }
+    localCache.delete(url); // Supprime les données expirées
+    return null; // Pas de données valides dans le cache
+}
+
 // Fonction utilitaire pour effectuer une requête API via un proxy
 async function fetchAPI(url) {
-    console.log(`Fetching URL via proxy: ${url}`);
+    console.log(`Fetching URL: ${url}`);
+    const cachedData = getCache(url); // Vérifie si les données sont dans le cache
+    if (cachedData) {
+        console.log(`Cache hit for URL: ${url}`);
+        return cachedData;
+    }
+
     try {
         const response = await fetch(url);
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
         }
         const data = await response.json();
-        console.log(`Data fetched via proxy for url ${url}:`, data);
+        console.log(`Data fetched for URL: ${url}`);
+        setCache(url, data); // Ajoute les données au cache
         return data;
     } catch (error) {
-        console.error("Fetch error:", error);
+        console.error(`Fetch error for URL ${url}:`, error);
         throw error;
     }
 }
@@ -70,19 +97,33 @@ async function fetchPlayersByQuery(query) {
     let page = 1;
     let hasMore = true;
     console.log(`Starting fetch query: ${query}`);
-    while (hasMore) {
-        const url = `${PROXY_URL}/players?${query}&page=${page}`;
-        const data = await fetchAPI(url);
-        if (data.response) {
-            allPlayers = allPlayers.concat(data.response);
-            console.log(`Page ${page}: ${data.response.length} players fetched`);
-            hasMore = data.paging.current < data.paging.total;
-            page++;
-        } else {
-            console.log(`No more data available after page ${page}`);
-            hasMore = false;
+
+    // Liste des promesses pour récupérer toutes les pages
+    const promises = [];
+
+    // Faire une première requête pour déterminer le nombre total de pages
+    const firstUrl = `${PROXY_URL}/players?${query}&page=${page}`;
+    const firstResponse = await fetchAPI(firstUrl);
+    if (firstResponse.response) {
+        allPlayers = allPlayers.concat(firstResponse.response);
+        console.log(`Page ${page}: ${firstResponse.response.length} players fetched`);
+        const totalPages = firstResponse.paging.total;
+
+        // Planifier toutes les pages restantes
+        for (let i = 2; i <= totalPages; i++) {
+            const url = `${PROXY_URL}/players?${query}&page=${i}`;
+            promises.push(fetchAPI(url));
         }
+
+        // Récupérer toutes les données en parallèle
+        const results = await Promise.all(promises);
+        results.forEach(data => {
+            if (data.response) {
+                allPlayers = allPlayers.concat(data.response);
+            }
+        });
     }
+
     console.log(`Total players fetched with query ${query}: ${allPlayers.length}`);
     return allPlayers;
 }
@@ -102,9 +143,9 @@ export async function selectPlayersByPosition(players, position, count) {
         console.error("Expected array of players, received:", players);
         return [];
     }
-    const selected = players.filter(player => 
-        player.statistics && player.statistics.length > 0 && 
-        player.statistics[0].games && 
+    const selected = players.filter(player =>
+        player.statistics && player.statistics.length > 0 &&
+        player.statistics[0].games &&
         player.statistics[0].games.position === position
     ).slice(0, count);
     console.log(`Selected ${selected.length} players for position ${position}`);
