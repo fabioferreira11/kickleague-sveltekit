@@ -36,12 +36,28 @@ async function assignWelcomePackPlayers(userId, players) {
 
 // Fonction pour synchroniser les joueurs de la base de données avec les données actuelles de la Primeira Liga
 async function synchronizePlayers(season) {
+    const cacheKey = `primeira_liga_sync_${season}`;
+    const cachedData = await redisClient.get(cacheKey);
+
+    if (cachedData) {
+        console.log("Synchronization skipped, data already cached.");
+        return JSON.parse(cachedData);
+    }
+
     try {
-        const players = await getPlayersFromPrimeiraLiga(94, season);  // 94 est l'ID de la ligue
+        const players = await getPlayersFromPrimeiraLiga(94, season); // 94 est l'ID de la ligue
         for (const player of players) {
             await ensurePlayerExists(player);
         }
+
         console.log(`Synchronization complete for ${players.length} players.`);
+
+        // Mettre en cache les données synchronisées
+        await redisClient.set(cacheKey, JSON.stringify(players), {
+            EX: 3600, // 1 heure
+        });
+
+        return players;
     } catch (err) {
         console.error("Error during player synchronization:", err);
         throw err;
@@ -61,30 +77,27 @@ export async function POST({ request }) {
 
         if (cachedPlayers) {
             console.log("Données récupérées du cache Redis.");
-            return json({ selectedPlayers: JSON.parse(cachedPlayers) }); // Retourner les joueurs du cache
+            return json({ selectedPlayers: JSON.parse(cachedPlayers) });
         }
 
-        // Étape 2 : Vérifie si l'utilisateur a déjà des joueurs assignés
-        const existingPlayers = await mysqlDatabase.query('SELECT 1 FROM user_players WHERE user_id = ?', [userId]);
+        // Étape 2 : Vérifiez si l'utilisateur a des joueurs assignés
+        const existingPlayers = await getUserAssignedPlayers(userId);
         if (existingPlayers.length > 0) {
-            const assignedPlayers = await getUserAssignedPlayers(userId);
-            // Stocker les données récupérées en cache
-            await redisClient.set(cacheKey, JSON.stringify(assignedPlayers), {
-                EX: 3600, // Expiration en secondes (1 heure)
+            console.log("Players found in database.");
+            await redisClient.set(cacheKey, JSON.stringify(existingPlayers), {
+                EX: 3600, // Expiration en 1 heure
             });
-            return json({ selectedPlayers: assignedPlayers });
+            return json({ selectedPlayers: existingPlayers });
         }
 
-        // Étape 3 : Synchronisation et récupération des joueurs
+        // Étape 3 : Synchronisez les joueurs si nécessaire
         const userDetails = await mysqlDatabase.query('SELECT club, pays FROM users WHERE id = ?', [userId]);
         if (userDetails.length === 0) {
             return error(404, "User not found");
         }
 
         const { club, pays } = userDetails[0];
-        await synchronizePlayers(new Date().getFullYear());
-
-        const allPlayers = await getPlayersFromPrimeiraLiga(94, new Date().getFullYear());
+        const allPlayers = await synchronizePlayers(new Date().getFullYear());
         const clubPlayers = await getPlayersByClub(club, new Date().getFullYear());
         const countryPlayers = filterPlayersByCountry(allPlayers, countryMappings[pays.toLowerCase()]);
 
@@ -92,20 +105,18 @@ export async function POST({ request }) {
         let selectedPlayers = [];
 
         for (let position of positions) {
-            let fromClub = await selectPlayersByPosition(clubPlayers, position, 1) || [];
-            let fromCountry = await selectPlayersByPosition(countryPlayers, position, 1) || [];
-            let additionalNeeded = 2 - (fromClub.length + fromCountry.length);
-            let additionalPlayers = await selectPlayersByPosition(allPlayers, position, additionalNeeded) || [];
+            const fromClub = await selectPlayersByPosition(clubPlayers, position, 1) || [];
+            const fromCountry = await selectPlayersByPosition(countryPlayers, position, 1) || [];
+            const additionalNeeded = 2 - (fromClub.length + fromCountry.length);
+            const additionalPlayers = await selectPlayersByPosition(allPlayers, position, additionalNeeded) || [];
 
             selectedPlayers.push(...fromClub, ...fromCountry, ...additionalPlayers);
         }
 
-        // Assigner les joueurs à l'utilisateur
+        // Étape 4 : Assigner les joueurs et mettre en cache
         await assignWelcomePackPlayers(userId, selectedPlayers.slice(0, 8));
-
-        // Étape 4 : Stocker les joueurs assignés dans Redis
         await redisClient.set(cacheKey, JSON.stringify(selectedPlayers.slice(0, 8)), {
-            EX: 3600, // Expiration en secondes (1 heure)
+            EX: 3600, // Expiration en 1 heure
         });
 
         return json({ selectedPlayers: selectedPlayers.slice(0, 8) });

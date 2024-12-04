@@ -36,8 +36,23 @@ export async function getPlayersByClub(clubName, season) {
 
 // Fonction pour obtenir les joueurs de la ligue portugaise pour une saison donnée
 export async function getPlayersFromPrimeiraLiga(leagueId, season) {
+    const cacheKey = `primeira_liga_${leagueId}_${season}`;
+    const cachedData = await redisClient.get(cacheKey);
+
+    if (cachedData) {
+        console.log("Primeira Liga data fetched from cache.");
+        return JSON.parse(cachedData);
+    }
+
     console.log(`Fetching players from Primeira Liga for season ${season}`);
-    return await fetchPlayersByQuery(`league=${leagueId}&season=${season}`);
+    const players = await fetchPlayersByQuery(`league=${leagueId}&season=${season}`);
+
+    // Mettre en cache les résultats
+    await redisClient.set(cacheKey, JSON.stringify(players), {
+        EX: 3600, // Cache pour 1 heure
+    });
+
+    return players;
 }
 
 // Fonction pour obtenir les données d'un joueur spécifique pour une saison donnée
@@ -81,8 +96,8 @@ async function fetchPlayersByQuery(query) {
     console.log(`Total pages to fetch: ${totalPages}`);
 
     // Regrouper les appels par lots
-    const batchSize = 10; // Taille des lots (ex. 10 pages par lot)
-    const delayBetweenBatches = 1000; // Délai entre les lots en millisecondes (ex. 1 seconde)
+    const batchSize = 5; // la taille du lot
+    const delayBetweenBatches = 500; // l'intervalle pour accélérer
     const allPlayers = [];
 
     for (let i = 0; i < totalPages; i += batchSize) {
