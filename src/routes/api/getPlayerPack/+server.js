@@ -2,7 +2,7 @@ import { error, json } from '@sveltejs/kit';  // Importation des fonctions pour 
 import { mysqlDatabase } from '$lib/mysqlDatabase';  // Importation de la connexion à la base de données MySQL
 import { getPlayersByClub, getPlayersFromPrimeiraLiga, filterPlayersByCountry, selectPlayersByPosition } from '$lib/api';  // Importation des fonctions pour récupérer les données des joueurs
 import countryMappings from '$lib/paysMappings';  // Importation des mappages de pays
-import redisClient from '$lib/redisClient';// Importation du client Redis
+import redisClient, { ensureRedisConnected } from '$lib/redisClient';// Importation du client Redis
 
 // Fonction pour vérifier si un joueur existe déjà dans la base de données, sinon l'insérer
 async function ensurePlayerExists(player) {
@@ -37,6 +37,10 @@ async function assignWelcomePackPlayers(userId, players) {
 // Fonction pour synchroniser les joueurs de la base de données avec les données actuelles de la Primeira Liga
 async function synchronizePlayers(season) {
     const cacheKey = `primeira_liga_sync_${season}`;
+
+    // S'assurer que Redis est connecté
+    await ensureRedisConnected();
+
     const cachedData = await redisClient.get(cacheKey);
 
     if (cachedData) {
@@ -71,8 +75,11 @@ export async function POST({ request }) {
     console.log("Fetching player pack for user:", userId);
 
     try {
-        // Étape 1 : Vérifiez si les joueurs sont déjà en cache
         const cacheKey = `user_${userId}_players`;
+
+        // S'assurer que Redis est connecté
+        await ensureRedisConnected();
+
         const cachedPlayers = await redisClient.get(cacheKey);
 
         if (cachedPlayers) {
@@ -80,7 +87,6 @@ export async function POST({ request }) {
             return json({ selectedPlayers: JSON.parse(cachedPlayers) });
         }
 
-        // Étape 2 : Vérifiez si l'utilisateur a des joueurs assignés
         const existingPlayers = await getUserAssignedPlayers(userId);
         if (existingPlayers.length > 0) {
             console.log("Players found in database.");
@@ -90,7 +96,6 @@ export async function POST({ request }) {
             return json({ selectedPlayers: existingPlayers });
         }
 
-        // Étape 3 : Synchronisez les joueurs si nécessaire
         const userDetails = await mysqlDatabase.query('SELECT club, pays FROM users WHERE id = ?', [userId]);
         if (userDetails.length === 0) {
             return error(404, "User not found");
@@ -113,7 +118,6 @@ export async function POST({ request }) {
             selectedPlayers.push(...fromClub, ...fromCountry, ...additionalPlayers);
         }
 
-        // Étape 4 : Assigner les joueurs et mettre en cache
         await assignWelcomePackPlayers(userId, selectedPlayers.slice(0, 8));
         await redisClient.set(cacheKey, JSON.stringify(selectedPlayers.slice(0, 8)), {
             EX: 3600, // Expiration en 1 heure

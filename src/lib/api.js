@@ -1,6 +1,6 @@
 import clubIds from '$lib/clubMappings';
 import countryMappings from '$lib/paysMappings';
-import redisClient from '$lib/redisClient';
+import redisClient, { ensureRedisConnected } from '$lib/redisClient';
 
 // Constantes pour le proxy, l'ID de la ligue et la saison courante
 const PROXY_URL = 'https://kickleague-sveltekit.onrender.com/api';
@@ -38,6 +38,10 @@ export async function getPlayersByClub(clubName, season) {
 // Fonction pour obtenir les joueurs de la ligue portugaise pour une saison donnée
 export async function getPlayersFromPrimeiraLiga(leagueId, season) {
     const cacheKey = `primeira_liga_${leagueId}_${season}`;
+
+    // S'assurer que Redis est connecté
+    await ensureRedisConnected();
+
     const cachedData = await redisClient.get(cacheKey);
 
     if (cachedData) {
