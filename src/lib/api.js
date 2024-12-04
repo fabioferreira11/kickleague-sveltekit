@@ -71,7 +71,7 @@ async function fetchPlayersByQuery(query) {
     // Appel à la première page pour obtenir le nombre total de pages
     const firstPageUrl = `${PROXY_URL}/players?${query}&page=1`;
     const firstPageData = await fetchAPI(firstPageUrl);
-    
+
     if (!firstPageData.response || !firstPageData.paging) {
         console.log(`No data returned for query: ${query}`);
         return [];
@@ -80,27 +80,38 @@ async function fetchPlayersByQuery(query) {
     const totalPages = firstPageData.paging.total;
     console.log(`Total pages to fetch: ${totalPages}`);
 
-    // Créer un tableau de promesses pour toutes les pages
-    const pagePromises = Array.from({ length: totalPages }, (_, index) =>
-        fetchAPI(`${PROXY_URL}/players?${query}&page=${index + 1}`)
-    );
+    // Regrouper les appels par lots
+    const batchSize = 10; // Taille des lots (ex. 10 pages par lot)
+    const delayBetweenBatches = 1000; // Délai entre les lots en millisecondes (ex. 1 seconde)
+    const allPlayers = [];
 
-    // Récupérer les données de toutes les pages en parallèle
-    const allPagesData = await Promise.all(pagePromises);
+    for (let i = 0; i < totalPages; i += batchSize) {
+        const batchPromises = Array.from(
+            { length: Math.min(batchSize, totalPages - i) }, 
+            (_, index) => fetchAPI(`${PROXY_URL}/players?${query}&page=${i + index + 1}`)
+        );
 
-    // Fusionner toutes les réponses en un seul tableau de joueurs
-    const allPlayers = allPagesData.flatMap((page) => page.response || []);
+        try {
+            const batchResults = await Promise.all(batchPromises);
+            batchResults.forEach((result) => {
+                if (result.response) {
+                    allPlayers.push(...result.response);
+                }
+            });
+
+            console.log(`Batch ${i / batchSize + 1}: Fetched ${batchResults.length} pages`);
+        } catch (error) {
+            console.error(`Error in batch ${i / batchSize + 1}:`, error);
+        }
+
+        // Attendre avant de lancer le prochain lot
+        if (i + batchSize < totalPages) {
+            await new Promise((resolve) => setTimeout(resolve, delayBetweenBatches));
+        }
+    }
+
     console.log(`Total players fetched with query ${query}: ${allPlayers.length}`);
-
     return allPlayers;
-}
-
-// Fonction pour filtrer les joueurs par pays
-export function filterPlayersByCountry(players, country) {
-    console.log(`Filtering players for country: ${country}`);
-    const filtered = players.filter(player => player.player.nationality === country);
-    console.log(`Filtered players count for ${country}: ${filtered.length}`);
-    return filtered;
 }
 
 // Fonction pour sélectionner des joueurs en fonction de leur position
