@@ -1,5 +1,6 @@
 import clubIds from '$lib/clubMappings';
 import countryMappings from '$lib/paysMappings';
+import redisClient from '$lib/redisClient';
 
 // Constantes pour le proxy, l'ID de la ligue et la saison courante
 const PROXY_URL = 'https://kickleague-sveltekit.onrender.com/api';
