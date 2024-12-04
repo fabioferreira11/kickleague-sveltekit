@@ -2,7 +2,7 @@ import { error, json } from '@sveltejs/kit';  // Importation des fonctions pour 
 import { mysqlDatabase } from '$lib/mysqlDatabase';  // Importation de la connexion à la base de données MySQL
 import { getPlayersByClub, getPlayersFromPrimeiraLiga, filterPlayersByCountry, selectPlayersByPosition } from '$lib/api';  // Importation des fonctions pour récupérer les données des joueurs
 import countryMappings from '$lib/paysMappings';  // Importation des mappages de pays
-import redisClient, { ensureRedisConnected } from '$lib/redisClient';// Importation du client Redis
+import redisClient from '$lib/redisClient';// Importation du client Redis
 
 // Fonction pour vérifier si un joueur existe déjà dans la base de données, sinon l'insérer
 async function ensurePlayerExists(player) {

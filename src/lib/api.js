@@ -1,6 +1,5 @@
 import clubIds from '$lib/clubMappings';
 import countryMappings from '$lib/paysMappings';
-import redisClient, { ensureRedisConnected } from '$lib/redisClient';
 
 // Constantes pour le proxy, l'ID de la ligue et la saison courante
 const PROXY_URL = 'https://kickleague-sveltekit.onrender.com/api';
@@ -37,27 +36,8 @@ export async function getPlayersByClub(clubName, season) {
 
 // Fonction pour obtenir les joueurs de la ligue portugaise pour une saison donnée
 export async function getPlayersFromPrimeiraLiga(leagueId, season) {
-    const cacheKey = `primeira_liga_${leagueId}_${season}`;
-
-    // S'assurer que Redis est connecté
-    await ensureRedisConnected();
-
-    const cachedData = await redisClient.get(cacheKey);
-
-    if (cachedData) {
-        console.log("Primeira Liga data fetched from cache.");
-        return JSON.parse(cachedData);
-    }
-
     console.log(`Fetching players from Primeira Liga for season ${season}`);
-    const players = await fetchPlayersByQuery(`league=${leagueId}&season=${season}`);
-
-    // Mettre en cache les résultats
-    await redisClient.set(cacheKey, JSON.stringify(players), {
-        EX: 3600, // Cache pour 1 heure
-    });
-
-    return players;
+    return await fetchPlayersByQuery(`league=${leagueId}&season=${season}`);
 }
 
 // Fonction pour obtenir les données d'un joueur spécifique pour une saison donnée
@@ -175,4 +155,4 @@ export async function getNextMatchByTeam(teamId) {
         console.error(`Error fetching next match for team ID ${teamId}:`, error);
         throw error;
     }
-} 
+}
