@@ -113,4 +113,4 @@ export async function POST({ request }) {
         console.error("Error processing player pack request:", error);
         return json({ message: 'Internal Error' }, { status: 500 });
     }
-} 
+}
