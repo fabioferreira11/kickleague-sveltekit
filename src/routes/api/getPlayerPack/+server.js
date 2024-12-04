@@ -2,6 +2,7 @@ import { error, json } from '@sveltejs/kit';  // Importation des fonctions pour 
 import { mysqlDatabase } from '$lib/mysqlDatabase';  // Importation de la connexion à la base de données MySQL
 import { getPlayersByClub, getPlayersFromPrimeiraLiga, filterPlayersByCountry, selectPlayersByPosition } from '$lib/api';  // Importation des fonctions pour récupérer les données des joueurs
 import countryMappings from '$lib/paysMappings';  // Importation des mappages de pays
+import redisClient from '$lib/redisClient';// Importation du client Redis
 
 // Fonction pour vérifier si un joueur existe déjà dans la base de données, sinon l'insérer
 async function ensurePlayerExists(player) {
@@ -49,28 +50,40 @@ async function synchronizePlayers(season) {
 
 // Fonction pour gérer les requêtes POST à l'endpoint getPlayerPack
 export async function POST({ request }) {
-    const { userId } = await request.json();  // Extraction de l'ID utilisateur du corps de la requête
+    const { userId } = await request.json();
 
     console.log("Fetching player pack for user:", userId);
 
     try {
-        // Vérifie si l'utilisateur a déjà des joueurs assignés
+        // Étape 1 : Vérifiez si les joueurs sont déjà en cache
+        const cacheKey = `user_${userId}_players`;
+        const cachedPlayers = await redisClient.get(cacheKey);
+
+        if (cachedPlayers) {
+            console.log("Données récupérées du cache Redis.");
+            return json({ selectedPlayers: JSON.parse(cachedPlayers) }); // Retourner les joueurs du cache
+        }
+
+        // Étape 2 : Vérifie si l'utilisateur a déjà des joueurs assignés
         const existingPlayers = await mysqlDatabase.query('SELECT 1 FROM user_players WHERE user_id = ?', [userId]);
         if (existingPlayers.length > 0) {
-            const assignedPlayers = await getUserAssignedPlayers(userId);  // Récupère les joueurs assignés
+            const assignedPlayers = await getUserAssignedPlayers(userId);
+            // Stocker les données récupérées en cache
+            await redisClient.set(cacheKey, JSON.stringify(assignedPlayers), {
+                EX: 3600, // Expiration en secondes (1 heure)
+            });
             return json({ selectedPlayers: assignedPlayers });
         }
 
-        // Récupère les détails du club et du pays de l'utilisateur
+        // Étape 3 : Synchronisation et récupération des joueurs
         const userDetails = await mysqlDatabase.query('SELECT club, pays FROM users WHERE id = ?', [userId]);
         if (userDetails.length === 0) {
             return error(404, "User not found");
         }
 
         const { club, pays } = userDetails[0];
-        await synchronizePlayers(new Date().getFullYear());  // Synchronisation des joueurs pour l'année en cours
+        await synchronizePlayers(new Date().getFullYear());
 
-        // Récupère tous les joueurs de la Primeira Liga pour l'année en cours
         const allPlayers = await getPlayersFromPrimeiraLiga(94, new Date().getFullYear());
         const clubPlayers = await getPlayersByClub(club, new Date().getFullYear());
         const countryPlayers = filterPlayersByCountry(allPlayers, countryMappings[pays.toLowerCase()]);
@@ -78,7 +91,6 @@ export async function POST({ request }) {
         const positions = ['Goalkeeper', 'Defender', 'Midfielder', 'Attacker'];
         let selectedPlayers = [];
 
-        // Sélectionne les joueurs par position en fonction du club et du pays
         for (let position of positions) {
             let fromClub = await selectPlayersByPosition(clubPlayers, position, 1) || [];
             let fromCountry = await selectPlayersByPosition(countryPlayers, position, 1) || [];
@@ -88,8 +100,14 @@ export async function POST({ request }) {
             selectedPlayers.push(...fromClub, ...fromCountry, ...additionalPlayers);
         }
 
-        // Assigne les joueurs sélectionnés à l'utilisateur et les retourne en réponse
+        // Assigner les joueurs à l'utilisateur
         await assignWelcomePackPlayers(userId, selectedPlayers.slice(0, 8));
+
+        // Étape 4 : Stocker les joueurs assignés dans Redis
+        await redisClient.set(cacheKey, JSON.stringify(selectedPlayers.slice(0, 8)), {
+            EX: 3600, // Expiration en secondes (1 heure)
+        });
+
         return json({ selectedPlayers: selectedPlayers.slice(0, 8) });
     } catch (error) {
         console.error("Error processing player pack request:", error);
