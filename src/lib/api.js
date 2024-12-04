@@ -66,24 +66,32 @@ export async function getPlayerData(playerId, season) {
 
 // Fonction utilitaire pour récupérer les joueurs en fonction d'une requête
 async function fetchPlayersByQuery(query) {
-    let allPlayers = [];
-    let page = 1;
-    let hasMore = true;
     console.log(`Starting fetch query: ${query}`);
-    while (hasMore) {
-        const url = `${PROXY_URL}/players?${query}&page=${page}`;
-        const data = await fetchAPI(url);
-        if (data.response) {
-            allPlayers = allPlayers.concat(data.response);
-            console.log(`Page ${page}: ${data.response.length} players fetched`);
-            hasMore = data.paging.current < data.paging.total;
-            page++;
-        } else {
-            console.log(`No more data available after page ${page}`);
-            hasMore = false;
-        }
+    
+    // Appel à la première page pour obtenir le nombre total de pages
+    const firstPageUrl = `${PROXY_URL}/players?${query}&page=1`;
+    const firstPageData = await fetchAPI(firstPageUrl);
+    
+    if (!firstPageData.response || !firstPageData.paging) {
+        console.log(`No data returned for query: ${query}`);
+        return [];
     }
+
+    const totalPages = firstPageData.paging.total;
+    console.log(`Total pages to fetch: ${totalPages}`);
+
+    // Créer un tableau de promesses pour toutes les pages
+    const pagePromises = Array.from({ length: totalPages }, (_, index) =>
+        fetchAPI(`${PROXY_URL}/players?${query}&page=${index + 1}`)
+    );
+
+    // Récupérer les données de toutes les pages en parallèle
+    const allPagesData = await Promise.all(pagePromises);
+
+    // Fusionner toutes les réponses en un seul tableau de joueurs
+    const allPlayers = allPagesData.flatMap((page) => page.response || []);
     console.log(`Total players fetched with query ${query}: ${allPlayers.length}`);
+
     return allPlayers;
 }
 
