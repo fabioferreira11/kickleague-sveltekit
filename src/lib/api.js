@@ -171,4 +171,4 @@ export async function getNextMatchByTeam(teamId) {
         console.error(`Error fetching next match for team ID ${teamId}:`, error);
         throw error;
     }
-}
+} 
