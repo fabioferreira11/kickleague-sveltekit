@@ -9,6 +9,20 @@ export async function POST({ request }) {
     console.log(`Assigning player pack for user: ${userId}`);
 
     try {
+        // Vérifier si des joueurs ont déjà été attribués à cet utilisateur
+        const existingPlayers = await mysqlDatabase.query(
+            'SELECT player_id FROM user_players WHERE user_id = ?',
+            [userId]
+        );
+
+        if (existingPlayers.length > 0) {
+            console.log(`User ${userId} already has assigned players.`);
+            return json({
+                message: "Players already assigned",
+                assignedPlayers: existingPlayers,
+            });
+        }
+
         // Récupérer les joueurs intermédiaires du cache
         const playerCache = await redisClient.get(`user_${userId}_players`);
         if (!playerCache) {
