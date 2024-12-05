@@ -23,44 +23,6 @@ async function fetchAPI(url) {
     }
 }
 
-// Fonction pour préparer les données utilisateur
-export async function preparePlayerPack(userId) {
-    const response = await fetch('/api/preparePlayerPack', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId })
-    });
-    if (!response.ok) {
-        throw new Error("Failed to prepare player pack");
-    }
-}
-
-// Fonction pour générer la liste des joueurs
-export async function generatePlayerList(userId) {
-    const response = await fetch('/api/generatePlayerList', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId })
-    });
-    if (!response.ok) {
-        throw new Error("Failed to generate player list");
-    }
-}
-
-// Fonction pour assigner le pack de joueurs
-export async function assignPlayerPack(userId) {
-    const response = await fetch('/api/assignPlayerPack', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId })
-    });
-    if (!response.ok) {
-        throw new Error("Failed to assign player pack");
-    }
-    return await response.json();
-}
-
-
 // Fonction pour obtenir les joueurs d'un club spécifique pour une saison donnée
 export async function getPlayersByClub(clubName, season) {
     const clubId = clubIds[clubName];

@@ -2,7 +2,6 @@
     import { onMount } from 'svelte';
     import CarteJoueur from '$lib/carte-joueur.svelte';
     import { fly, fade } from 'svelte/transition';
-    import { preparePlayerPack, generatePlayerList, assignPlayerPack } from '$lib/api';
 
     // Variables d'état pour gérer l'affichage du pack, le statut d'ouverture, et les joueurs récupérés
     let players = [];
@@ -15,32 +14,30 @@
 
     // Fonction pour récupérer le pack de joueurs pour l'utilisateur
     async function fetchPlayerPack() {
-    const checkResponse = await fetch('/api/checkPackStatus', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId })
-    });
+        const checkResponse = await fetch('/api/checkPackStatus', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId })
+        });
 
-    const checkData = await checkResponse.json();
-    packOpened = checkData.packOpened;
+        const checkData = await checkResponse.json();
+        packOpened = checkData.packOpened; // Mise à jour de l'état packOpened selon la réponse du serveur
 
-    if (!packOpened) {
-        try {
-            // Étape 1 : Préparation des données utilisateur
-            await preparePlayerPack(userId);
+        if (!packOpened) { // Si le pack n'est pas déjà ouvert
+            const response = await fetch('/api/getPlayerPack', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId })
+            });
 
-            // Étape 2 : Génération de la liste des joueurs
-            await generatePlayerList(userId);
-
-            // Étape 3 : Attribution du pack de joueurs
-            const playerPack = await assignPlayerPack(userId);
-
-            players = playerPack.selectedPlayers; // Charger les joueurs assignés
-        } catch (error) {
-            console.error("Error during player pack process:", error);
+            if (response.ok) {
+                const data = await response.json();
+                players = data.selectedPlayers; // Stocker les joueurs obtenus du serveur
+            } else {
+                console.error("Failed to load player pack:", await response.text());
+            }
         }
     }
-}
 
     // Marque le pack comme ouvert et déclenche l'affichage des cartes
     async function markPackAsOpened() {
