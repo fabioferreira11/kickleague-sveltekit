@@ -25,7 +25,14 @@ export async function POST({ request }) {
     console.log(`Preparing data for user: ${userId}`);
 
     try {
-        // Étape 1 : Vérifier si l'utilisateur existe
+        // Étape 1 : Vérifier si l'utilisateur a déjà des joueurs attribués
+        const existingPlayers = await mysqlDatabase.query('SELECT player_id FROM user_players WHERE user_id = ?', [userId]);
+        if (existingPlayers.length > 0) {
+            console.log(`User ${userId} already has assigned players. Skipping preparation.`);
+            return json({ message: "User already has assigned players" });
+        }
+
+        // Étape 2 : Vérifier si l'utilisateur existe
         const userDetails = await mysqlDatabase.query('SELECT club, pays FROM users WHERE id = ?', [userId]);
         if (userDetails.length === 0) {
             return error(404, "User not found");
@@ -47,10 +54,10 @@ export async function POST({ request }) {
             }
         }
 
-        // Étape 2 : Synchroniser les joueurs si nécessaire
+        // Étape 3 : Synchroniser les joueurs si nécessaire
         await synchronizePlayers(new Date().getFullYear());
 
-        // Étape 3 : Stocker les informations utilisateur dans une base temporaire (cache)
+        // Étape 4 : Stocker les informations utilisateur dans une base temporaire (cache)
         await redisClient.set(`user_${userId}_details`, JSON.stringify({ club, pays }), {
             EX: 3600, // Expire en 1 heure
         });
