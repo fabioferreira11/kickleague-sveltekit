@@ -2,9 +2,10 @@
     import'../../styles/global.css';  // Importation des styles globaux
     import { onMount, onDestroy } from 'svelte';  // Importation des hooks de cycle de vie de Svelte
     import Header from '$lib/header.svelte';  // Importation du composant Header
+    import { preparePlayerPack, generatePlayerList, assignPlayerPack } from '$lib/api';
     import CarteJoueur from '$lib/carte-joueur.svelte';  // Importation du composant CarteJoueur
     import MenuBurger from '$lib/MenuBurger.svelte';  // Importation du composant MenuBurger pour les mobiles
-    import { loadPlayers } from '$lib/playerLoader.js';  // Importation de la fonction pour charger les joueurs
+    // import { loadPlayers } from '$lib/playerLoader.js';  // Importation de la fonction pour charger les joueurs
 
     // Variables pour gérer l'état de la page : détection mobile, liste des joueurs, etc.
     let isMobile = false;
@@ -40,39 +41,39 @@
         });
     }
 
-    // Code exécuté au montage du composant
     onMount(async () => {
         const sessionResponse = await fetch('/api/session', {
             method: 'GET',
             credentials: 'include'
         });
         const sessionData = await sessionResponse.json();
-        console.log("Session Data:", sessionData);
+
         if (sessionResponse.ok) {
             userId = sessionData.userid;
 
-            // Appel API pour obtenir le pack de joueur
-            const getPlayerPackResponse = await fetch('/api/getPlayerPack', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ userId })
-            });
-            const getPlayerPackData = await getPlayerPackResponse.json();
-            console.log("getPlayerPack Response:", getPlayerPackData);
+            try {
+                // Étape 1 : Préparation des données utilisateur
+                await preparePlayerPack(userId);
 
-            // Chargement des joueurs pour l'utilisateur
-            players = await loadPlayers(userId);
-            console.log("Loaded Players :", players);
+                // Étape 2 : Génération de la liste des joueurs
+                await generatePlayerList(userId);
+
+                // Étape 3 : Attribution du pack de joueurs
+                const playerPack = await assignPlayerPack(userId);
+
+                players = playerPack.selectedPlayers; // Charger les joueurs assignés
+                console.log("Players assigned to user:", players);
+            } catch (error) {
+                console.error("Error during player pack process:", error);
+            }
 
             updateTeamFilters();  // Mise à jour des filtres d'équipe
             checkDataTeamAttributes();  // Vérification des attributs des cartes
         }
 
         if (typeof window !== 'undefined') {
-            checkScreenSize();  // Vérification de la taille de l'écran au chargement
-            window.addEventListener('resize', checkScreenSize);  // Ecouteur pour le redimensionnement de l'écran
+            checkScreenSize();// Vérification de la taille de l'écran au chargement
+            window.addEventListener('resize', checkScreenSize);// Ecouteur pour le redimensionnement de l'écran
 
             document.querySelectorAll('.filter-dropdown button').forEach(button => {
                 button.addEventListener('click', function() {
@@ -111,7 +112,7 @@
         const fleche = mainTeamButton.querySelector('.fleche');
 
         // Mettre à jour l'affichage des cartes en fonction du filtre
-        document.querySelectorAll('.carte-joueur').forEach(card => {
+        document.querySelectorAll('.background-carte').forEach(card => {
             card.style.display = (filterValue === '*' || card.dataset.team === filterValue) ? 'flex' : 'none';
         });
 
@@ -134,7 +135,7 @@
 
     // Fonction pour mettre à jour les filtres d'équipe
     function updateTeamFilters() {
-        const teams = new Set(Array.from(document.querySelectorAll('.carte-joueur')).map(card => card.dataset.team));
+        const teams = new Set(Array.from(document.querySelectorAll('.background-carte')).map(card => card.dataset.team));
         const container = document.querySelector('[data-filter-group="team"]');
         container.innerHTML = '';
 
