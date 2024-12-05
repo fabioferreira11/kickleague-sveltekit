@@ -134,9 +134,14 @@
 
     // Fonction pour mettre à jour les filtres d'équipe
     function updateTeamFilters() {
-        const teams = new Set(Array.from(document.querySelectorAll('.background-carte')).map(card => card.dataset.team));
+        const teams = new Set(
+            Array.from(document.querySelectorAll('.background-carte'))
+                .map(card => card.dataset.team)
+        );
+        console.log("Teams détectées :", Array.from(teams));
+
         const container = document.querySelector('[data-filter-group="team"]');
-        container.innerHTML = '';
+        container.innerHTML = ''; // Effacer les options existantes
 
         const allButton = document.createElement('button');
         allButton.textContent = "Tous";
@@ -152,6 +157,7 @@
             container.appendChild(button);
         });
     }
+
 
     // Fonction pour trier les cartes par ordre croissant ou décroissant
     function sortCards() {
