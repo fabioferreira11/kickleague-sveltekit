@@ -1,5 +1,6 @@
 import { error, json } from '@sveltejs/kit'; // Gestion des réponses d'erreur et JSON
 import { mysqlDatabase } from '$lib/mysqlDatabase'; // Connexion à la base de données MySQL
+import { getPlayersFromPrimeiraLiga } from '$lib/api'; // Import de la fonction manquante
 import redisClient from '$lib/redisClient'; // Importation du client Redis
 
 export async function POST({ request }) {
