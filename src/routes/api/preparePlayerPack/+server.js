@@ -1,6 +1,5 @@
 import { error, json } from '@sveltejs/kit'; // Gestion des réponses d'erreur et JSON
 import { mysqlDatabase } from '$lib/mysqlDatabase'; // Connexion à la base de données MySQL
-import { synchronizePlayers } from '$lib/api'; // Importation de la fonction de synchronisation
 import redisClient from '$lib/redisClient'; // Importation du client Redis
 
 export async function POST({ request }) {
@@ -16,6 +15,20 @@ export async function POST({ request }) {
         }
 
         const { club, pays } = userDetails[0];
+
+        // Fonction pour synchroniser les joueurs de la base de données avec les données actuelles de la Primeira Liga
+        async function synchronizePlayers(season) {
+            try {
+                const players = await getPlayersFromPrimeiraLiga(94, season);  // 94 est l'ID de la ligue
+                for (const player of players) {
+                    await ensurePlayerExists(player);
+                }
+                console.log(`Synchronization complete for ${players.length} players.`);
+            } catch (err) {
+                console.error("Error during player synchronization:", err);
+                throw err;
+            }
+        }
 
         // Étape 2 : Synchroniser les joueurs si nécessaire
         await synchronizePlayers(new Date().getFullYear());
