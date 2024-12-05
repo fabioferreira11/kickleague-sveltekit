@@ -94,7 +94,7 @@
                 }
             });
         }
-    });
+    }); 
 
     // Code exécuté lorsque le composant est détruit
     onDestroy(() => {
