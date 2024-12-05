@@ -3,6 +3,22 @@ import { mysqlDatabase } from '$lib/mysqlDatabase'; // Connexion à la base de d
 import { getPlayersFromPrimeiraLiga } from '$lib/api'; // Import de la fonction manquante
 import redisClient from '$lib/redisClient'; // Importation du client Redis
 
+// Fonction pour vérifier si un joueur existe déjà dans la base de données
+async function ensurePlayerExists(player) {
+    const existingPlayer = await mysqlDatabase.query('SELECT id FROM players WHERE id = ?', [player.player.id]);
+    if (existingPlayer.length === 0) {
+        await mysqlDatabase.query('INSERT INTO players (id, nom, photo_url, position, age, club, pays) VALUES (?, ?, ?, ?, ?, ?, ?)', [
+            player.player.id, 
+            player.player.name, 
+            player.player.photo, 
+            player.statistics[0].games.position, 
+            player.player.age, 
+            player.statistics[0].team.name, 
+            player.player.nationality
+        ]);
+    }
+}
+
 export async function POST({ request }) {
     const { userId } = await request.json();
 
