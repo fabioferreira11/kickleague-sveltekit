@@ -1,6 +1,6 @@
 import { error, json } from '@sveltejs/kit'; // Gestion des réponses d'erreur et JSON
 import { mysqlDatabase } from '$lib/mysqlDatabase'; // Connexion à la base de données MySQL
-import { selectPlayersByPosition, assignWelcomePackPlayers } from '$lib/api'; // Import des fonctions pour sélectionner les joueurs
+import { selectPlayersByPosition } from '$lib/api'; // Import des fonctions pour sélectionner les joueurs
 import redisClient from '$lib/redisClient'; // Importation du client Redis
 
 export async function POST({ request }) {
@@ -29,7 +29,17 @@ export async function POST({ request }) {
             selectedPlayers.push(...fromClub, ...fromCountry, ...additionalPlayers);
         }
 
-        // Assigner les joueurs à l'utilisateur
+        // Fonction pour assigner un pack de bienvenue avec des joueurs à un utilisateur
+        async function assignWelcomePackPlayers(userId, players) {
+            const validPlayers = players.filter(player => player && player.player && player.player.id);
+            const playerIds = validPlayers.map(player => player.player.id);
+            const queries = playerIds.map(playerId =>
+                mysqlDatabase.query('INSERT INTO user_players (user_id, player_id) VALUES (?, ?)', [userId, playerId])
+            );
+            await Promise.all(queries);
+        }
+
+        // Appeler la fonction pour assigner les joueurs à l'utilisateur
         await assignWelcomePackPlayers(userId, selectedPlayers.slice(0, 8));
 
         return json({ selectedPlayers: selectedPlayers.slice(0, 8) });
