@@ -1,9 +1,8 @@
-import { error, json } from '@sveltejs/kit'; // Gestion des réponses d'erreur et JSON
-import { mysqlDatabase } from '$lib/mysqlDatabase'; // Connexion à la base de données MySQL
-import { getPlayersFromPrimeiraLiga } from '$lib/api'; // Import de la fonction manquante
-import redisClient from '$lib/redisClient'; // Importation du client Redis
+import { error, json } from '@sveltejs/kit';
+import { mysqlDatabase } from '$lib/mysqlDatabase';
+import { getPlayersFromPrimeiraLiga } from '$lib/api';
+import redisClient from '$lib/redisClient';
 
-// Fonction pour vérifier si un joueur existe déjà dans la base de données
 async function ensurePlayerExists(player) {
     const existingPlayer = await mysqlDatabase.query('SELECT id FROM players WHERE id = ?', [player.player.id]);
     if (existingPlayer.length === 0) {
@@ -29,6 +28,16 @@ export async function POST({ request }) {
         const existingPlayers = await mysqlDatabase.query('SELECT player_id FROM user_players WHERE user_id = ?', [userId]);
         if (existingPlayers.length > 0) {
             console.log(`User ${userId} already has assigned players. Skipping preparation.`);
+            
+            // Toujours mettre en cache les informations utilisateur
+            const userDetails = await mysqlDatabase.query('SELECT club, pays FROM users WHERE id = ?', [userId]);
+            if (userDetails.length > 0) {
+                const { club, pays } = userDetails[0];
+                await redisClient.set(`user_${userId}_details`, JSON.stringify({ club, pays }), {
+                    EX: 3600, // Expire en 1 heure
+                });
+            }
+
             return json({ message: "User already has assigned players" });
         }
 
@@ -40,10 +49,10 @@ export async function POST({ request }) {
 
         const { club, pays } = userDetails[0];
 
-        // Fonction pour synchroniser les joueurs de la base de données avec les données actuelles de la Primeira Liga
+        // Étape 3 : Synchroniser les joueurs si nécessaire
         async function synchronizePlayers(season) {
             try {
-                const players = await getPlayersFromPrimeiraLiga(94, season);  // 94 est l'ID de la ligue
+                const players = await getPlayersFromPrimeiraLiga(94, season);
                 for (const player of players) {
                     await ensurePlayerExists(player);
                 }
@@ -54,7 +63,6 @@ export async function POST({ request }) {
             }
         }
 
-        // Étape 3 : Synchroniser les joueurs si nécessaire
         await synchronizePlayers(new Date().getFullYear());
 
         // Étape 4 : Stocker les informations utilisateur dans une base temporaire (cache)
