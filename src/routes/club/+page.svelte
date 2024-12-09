@@ -111,7 +111,7 @@
         const fleche = mainTeamButton.querySelector('.fleche');
 
         // Mettre à jour l'affichage des cartes en fonction du filtre
-        document.querySelectorAll('.carte-joueur').forEach(card => {
+        document.querySelectorAll('.background-carte').forEach(card => {
             card.style.display = (filterValue === '*' || card.dataset.team === filterValue) ? 'flex' : 'none';
         });
 
@@ -134,7 +134,7 @@
 
     // Fonction pour mettre à jour les filtres d'équipe
     function updateTeamFilters() {
-        const teams = new Set(Array.from(document.querySelectorAll('.carte-joueur')).map(card => card.dataset.team));
+        const teams = new Set(Array.from(document.querySelectorAll('.background-carte')).map(card => card.dataset.team));
         const container = document.querySelector('[data-filter-group="team"]');
         container.innerHTML = '';
 

@@ -84,6 +84,7 @@
     @media (min-width: 768px) {
         .joueur {
             width: 20%;
+            align-items: flex-start;
         }
 
         .moyenne-joueur h2 {

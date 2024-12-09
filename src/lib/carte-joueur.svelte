@@ -16,14 +16,14 @@
     let clubShortName = "";
 
     // Fonction pour abréger les positions des joueurs
-    function abbreviatePosition(position) {
-        const abbreviations = {
-            'Attacker': 'ATT',
-            'Midfielder': 'MIL',
-            'Defender': 'DEF',
-            'Goalkeeper': 'GR'
+    function traductionPosition(position) {
+        const traduction = {
+            'Attacker': 'Attaquant',
+            'Midfielder': 'Milieu',
+            'Defender': 'Défenseur',
+            'Goalkeeper': 'Gardien'
         };
-        return abbreviations[position] || position;
+        return traduction[position] || position;
     }
 
     // Fonction pour obtenir l'abréviation du club en fonction de son nom
@@ -57,7 +57,7 @@
 
             if (data.games) {
                 gameInfo = data.games;
-                gameInfo.position = abbreviatePosition(gameInfo.position);
+                gameInfo.position = traductionPosition(gameInfo.position);
             } else {
                 gameInfo = { position: 'N/A' };
             }
@@ -75,44 +75,56 @@
 
 <!-- Condition pour afficher la carte du joueur si les informations de l'équipe sont disponibles -->
 {#if teamInfo && teamInfo.logo}
-<div class="carte-joueur" class:full-width={fullWidth} data-team={teamInfo.name}>
-        <div class="header-carte">
+<div class="background-carte" class:bg-c-compo-mobile={fullWidth} data-team={teamInfo.name}>
+    <div class="carte-joueur">
+        <img src={playerInfo.photo} alt={`Photo de ${playerInfo.name}`} class="photo-joueur"/>
+        <h3 class="nom-joueur">{playerInfo.name}</h3>
+        <div class="footer-carte">
             <div class="info-joueur">
-                <p class="age-joueur">{playerInfo.age}</p>
                 <p class="position-joueur">{gameInfo.position}</p>
+                <p class="age-joueur">{playerInfo.age} ans</p>
+                <p class="nom-club">{clubShortName}</p>
+            </div>
+            <div class="info-club">
+                <img src={teamInfo.logo} alt={`Logo de ${playerInfo.club}`} class="logo-equipe"/>
                 {#if playerInfo.isoCode}
                 <img src={`https://flagsapi.com/${playerInfo.isoCode}/flat/64.png`} alt={`Drapeau du ${playerInfo.pays}`} class="drapeau-pays"/>
                 {/if}
             </div>
-            <div class="info-club">
-                <p class="nom-club">{clubShortName}</p>
-                <img src={teamInfo.logo} alt={`Logo de ${playerInfo.club}`} class="logo-equipe"/>
-            </div>
         </div>
-        <img src={playerInfo.photo} alt={`Photo de ${playerInfo.name}`} class="photo-joueur"/>
-        <div class="barre">
-            <div class="barre1"></div>
-            <div class="barre2"></div>
-            <div class="barre3"></div>
-        </div>
-        <div class="footer-carte">
-            <p class="carte-rarete">standard</p>
-            <h3 class="nom-joueur">{playerInfo.name}</h3>
-        </div>
+    </div>
 </div>
 {:else}
 <p>Loading player information...</p>
 {/if}
 
 <style>
+    .background-carte{
+        display: flex;
+        flex-direction: column;
+        width: calc((100% / 2) - 2vw);
+        background-image: url(../../static/img/background-carte.jpg);
+        /* background-image: linear-gradient(135deg, #046d3f 0%, #fdfffe 20%, #fdfffe 60%, #046d3f 100%); */
+        /* background-color: transparent;
+        backdrop-filter: blur(20px);
+        background-image: linear-gradient(120deg, rgba(10, 10, 10, 0.7), rgba(255, 255, 255, 0.3));
+        background-size: 30px 30px; */
+        background-size: cover; 
+        background-position: center;
+        border-radius: 10px; 
+    }
+
     .carte-joueur {
         display: flex;
         flex-direction: column;
         align-items: center;
-        width: calc((100% / 2) - 2vw);
         border: 2px solid var(--black);
-        background: linear-gradient(180deg, #FFFFFF 0%, #FFFFFF 77%, var(--gris) 77%, var(--gris) 100%);
+        backdrop-filter: blur(20px);
         border-radius: 10px; 
+    }
+
+    .bg-c-compo-mobile{
+        width: calc((100% / 1) - 2vw);
     }
 
     .full-width{
@@ -123,7 +135,23 @@
         height: 10%;
     }
 
-    .header-carte{
+    
+    .photo-joueur{
+        width: 85%;
+        height: auto;
+        margin-block: 12px;
+        border-radius: 10px;
+    }
+
+    .nom-joueur{
+        font-family: "Raleway", sans-serif;
+        font-weight: 800;
+        font-size: 18px;
+        text-transform: uppercase;
+        margin: 0 auto 2vh auto;
+    }
+
+    .footer-carte{
         width: 100%;
         padding: 5px 2vw;
         display: flex;
@@ -132,7 +160,8 @@
     }
 
     .info-joueur{
-        width: 20%;
+        width: 40%;
+        text-align: left;
     }
 
     .info-club{
@@ -165,57 +194,39 @@
         font-weight: 600;
     }
 
-    .photo-joueur{
-        width: 80%;
-        height: auto;
-        margin-top: -30px;
-    }
-
-    .barre{
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-    }
-
-    .barre div{
-        margin-top: 0;
-        height: 2px;
-        width: 100%;
-        background-color: var(--black);
-        margin-bottom: 2px;
-    }
-
-    .footer-carte{
-        width: 100%;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .carte-rarete{
-        margin: auto;
-    }
-
-    .nom-joueur{
-        font-family: "Raleway", sans-serif;
-        font-weight: 800;
-        font-size: 16px;
-        text-transform: uppercase;
-        margin: 0 auto 2vh auto;
-    }
-
     @media (min-width: 768px) {
-        .carte-joueur {
-            width: calc((100% / 5) - 4vw);
-            border: 3px solid var(--black);
-            background: linear-gradient(180deg, #FFFFFF 0%, #FFFFFF 79%, var(--gris) 79%, var(--gris) 100%);
+        .background-carte{
+            width: calc((100% / 3.6) - 4vw);
             border-radius: 15px; 
+    }
+
+        .carte-joueur {
+            border: 3px solid var(--black);
+            background-color: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(20px);
+            border-radius: 15px; 
+        }
+
+        .bg-c-compo-mobile{
+            width: 16vw;
+            margin: auto;
         }
 
         .full-width {
             width: 16vw;
         }
 
-        .header-carte{
+        .photo-joueur{
+            width: 85%;
+            border-radius: 15px;
+            margin-block: 15px;
+        }
+
+        .nom-joueur{
+            font-size: 24px;
+        }
+
+        .footer-carte{
             padding: 5px 1vw;
         }
 
@@ -238,14 +249,22 @@
         .nom-club{
             font-size: 18px
         }
-        
-        .photo-joueur{
-            width: 100%;
+    }
+
+    @media (min-width: 1200px) {
+        .background-carte{
+            width: calc((100% / 5) - 4vw);
+            border-radius: 15px; 
         }
 
-        .nom-joueur{
-            font-size: 24px;
-            margin-top: 1vh;
+        .bg-c-compo-mobile{
+            width: 16vw;
+            margin: auto;
+        }
+
+        .full-width {
+            width: 16vw;
         }
     }
+
 </style>

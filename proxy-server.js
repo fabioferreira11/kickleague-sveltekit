@@ -8,7 +8,7 @@ const API_URL = 'https://v3.football.api-sports.io/';
 const API_KEY = '0ba5f424070a8357e46e974a8de6c542';
 
 // Utilisation du middleware CORS pour permettre les requêtes depuis n'importe quelle origine
-app.use(cors({origin: ['https://kickleague.netlify.app', 'http://localhost:3000']}));
+app.use(cors({origin: ['https://kickleague.netlify.app', 'http://localhost:3000', 'http://localhost:5173']}));
 
 
 /* 
