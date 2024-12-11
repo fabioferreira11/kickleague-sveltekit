@@ -105,7 +105,7 @@
         <section class="form-info">
             {#if !isSubmitted}
             <form>
-                <h2>Quel est votrer question ?</h2>
+                <h2>Quel est votre question ?</h2>
                 <div class="champ-2">
                     <div class="champ-3">
                         <label for="prenom">Prénom</label>

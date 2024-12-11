@@ -177,7 +177,7 @@
 
     .equipe-gameweek{
         width: 90vw;
-        margin: auto;
+        margin: 0vh 5vw;
         padding: 5vh 0 3vh 0;
         background: linear-gradient(-180deg,rgba(97, 197, 62, 1) 0%, rgba(25, 127, 60, 1) 100%);
         border-radius: 20px 20px 20px 0;
@@ -294,7 +294,7 @@
 
     .equipe-gameweek{
         width: 93vw;
-        margin: auto;
+        margin: 0vh 3vw;
     }
 
     .composition{

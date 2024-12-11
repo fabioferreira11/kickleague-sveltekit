@@ -331,7 +331,7 @@
         }
 
         .terrain {
-            width: 75%;
+            width: 80%;
             height: 85vh;
             margin-top: 0;
             background-size: contain;
@@ -361,7 +361,7 @@
         }
 
         .option {
-            width: 25%;
+            width: 20%;
             height: 85vh;
             margin-left: 1vw;
             padding: 10px;
@@ -372,6 +372,7 @@
         .option-joueur {
             display: flex;
             flex-direction: column;
+            align-items: center;
             overflow-y: auto;
         }
     }
