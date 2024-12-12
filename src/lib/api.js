@@ -1,5 +1,4 @@
 import clubIds from './clubMappings';
-console.log("clubIds content in api.js:", clubIds);
 import countryMappings from './paysMappings.js';
 
 // Constantes pour le proxy, l'ID de la ligue et la saison courante
