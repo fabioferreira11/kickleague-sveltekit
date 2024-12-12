@@ -2,7 +2,7 @@ import { mysqlDatabase } from '../../src/lib/mysqlDatabase.js';
 import { getPlayersFromPrimeiraLiga, getPlayersByClub, filterPlayersByCountry, selectPlayersByPosition } from '../../src/lib/api.js';
 
 const LEAGUE_ID = '94';
-const CURRENT_YEAR = 2023;
+const season = 2023;
 
 export const handler = async (event) => {
     try {
@@ -38,13 +38,13 @@ export const handler = async (event) => {
         const { club, pays } = result[0];
 
         // Étape 3 : Synchroniser les joueurs
-        const allPlayers = await getPlayersFromPrimeiraLiga(LEAGUE_ID, CURRENT_YEAR);
+        const allPlayers = await getPlayersFromPrimeiraLiga(LEAGUE_ID, season);
         if (!allPlayers || allPlayers.length === 0) {
             throw new Error("No players found for Primeira Liga.");
         }
         console.log(`Total players fetched from Primeira Liga: ${allPlayers.length}`);
 
-        const clubPlayers = await getPlayersByClub(club, CURRENT_YEAR);
+        const clubPlayers = await getPlayersByClub(club, season);
         console.log(`Players for club ${club}:`, clubPlayers);
 
         const countryPlayers = filterPlayersByCountry(allPlayers, pays);
@@ -66,14 +66,35 @@ export const handler = async (event) => {
             console.log(`Selected players for ${position}:`, { fromClub, fromCountry, additional });
         }
 
-        // Étape 5 : Enregistrer les joueurs en base de données
+        // Étape 5 : Vérifier et insérer les joueurs dans la table 'players'
         const finalPlayers = selectedPlayers.slice(0, 8);
         console.log(`Final players to assign for user ${userId}:`, finalPlayers);
 
-        const queries = finalPlayers.map(player =>
-            mysqlDatabase.query('INSERT INTO user_players (user_id, player_id) VALUES (?, ?)', [userId, player.player.id])
-        );
-        await Promise.all(queries);
+        for (let player of finalPlayers) {
+            const [existing] = await mysqlDatabase.query('SELECT id FROM players WHERE id = ?', [player.player.id]);
+
+            if (!existing || existing.length === 0) {
+                console.log(`Player ${player.player.id} does not exist. Inserting into 'players' table.`);
+                await mysqlDatabase.query(`
+                    INSERT INTO players (id, name, firstname, lastname, age, nationality, photo)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                `, [
+                    player.player.id,
+                    player.player.name,
+                    player.player.firstname,
+                    player.player.lastname,
+                    player.player.age,
+                    player.player.nationality,
+                    player.player.photo
+                ]);
+            }
+
+            // Insérer dans la table 'user_players'
+            await mysqlDatabase.query(
+                'INSERT INTO user_players (user_id, player_id) VALUES (?, ?)',
+                [userId, player.player.id]
+            );
+        }
 
         console.log(`Players successfully assigned to user ${userId}`);
         return { 
