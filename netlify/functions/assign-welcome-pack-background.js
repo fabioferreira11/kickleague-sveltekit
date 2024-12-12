@@ -25,19 +25,21 @@ export const handler = async (event) => {
         const [userDetails] = await mysqlDatabase.query('SELECT club, pays FROM users WHERE id = ?', [userId]);
         if (!userDetails) throw new Error("User not found in the database.");
 
+        console.log("Raw user details from DB:", userDetails); // Log des détails bruts
         let { club, pays } = userDetails;
 
         // Nettoyage et validation des clés
         club = String(club).trim().toLowerCase();
         pays = String(pays).trim().toLowerCase();
 
-        console.log(`User details: Club - ${club}, Pays - ${pays}`);
+        console.log(`Cleaned user details: Club - '${club}', Pays - '${pays}'`);
 
         // Debug : afficher les clés disponibles dans clubMappings
         console.log('Available club keys in clubMappings:', Object.keys(clubMappings));
 
         // Validation et mappage des valeurs
         const clubId = clubMappings[club];
+        console.log(`Mapped club ID for '${club}':`, clubId);
         if (!clubId) {
             throw new Error(`Invalid club abbreviation: '${club}'. Check available keys above.`);
         }
@@ -46,35 +48,42 @@ export const handler = async (event) => {
         console.log(`Mapped values: Club ID - ${clubId}, Country - ${country}`);
 
         // Étape 4 : Synchroniser les joueurs
+        console.log(`Fetching players for Primeira Liga (League ID: ${LEAGUE_ID}, Season: ${season})`);
         const allPlayers = await getPlayersFromPrimeiraLiga(LEAGUE_ID, season);
         if (!allPlayers || !allPlayers.length) throw new Error("No players found for Primeira Liga.");
 
+        console.log(`Fetching players for club ID: ${clubId}`);
         const clubPlayers = await getPlayersByClub(clubId, season);
-        if (!clubPlayers || !clubPlayers.length) console.warn(`No players found for club ID ${clubId}`);
+        console.log(`Fetched ${clubPlayers.length} players for club ID ${clubId}`);
 
+        console.log(`Filtering players for country: ${country}`);
         const countryPlayers = filterPlayersByCountry(allPlayers, country);
-        console.log(`Fetched players: Club (${clubPlayers.length}), Country (${countryPlayers.length})`);
+        console.log(`Fetched players count: Club (${clubPlayers.length}), Country (${countryPlayers.length})`);
 
         // Étape 5 : Sélectionner 8 joueurs (2 par position)
         const positions = ['Goalkeeper', 'Defender', 'Midfielder', 'Attacker'];
         let selectedPlayers = [];
 
         for (let position of positions) {
+            console.log(`Selecting players for position: ${position}`);
             let fromClub = await selectPlayersByPosition(clubPlayers, position, 1);
             let fromCountry = await selectPlayersByPosition(countryPlayers, position, 1);
             let remaining = 2 - (fromClub.length + fromCountry.length);
 
+            console.log(`Selected players from club (${fromClub.length}), country (${fromCountry.length}), additional remaining: ${remaining}`);
             let additional = await selectPlayersByPosition(allPlayers, position, remaining);
             selectedPlayers.push(...fromClub, ...fromCountry, ...additional);
         }
 
         const finalPlayers = selectedPlayers.slice(0, 8);
-        console.log(`Selected players:`, finalPlayers);
+        console.log(`Final selected players:`, finalPlayers);
 
         // Étape 6 : Insérer les joueurs dans les tables 'players' et 'user_players'
         for (let player of finalPlayers) {
+            console.log(`Checking if player ID ${player.player.id} exists in 'players' table`);
             const [existing] = await mysqlDatabase.query('SELECT id FROM players WHERE id = ?', [player.player.id]);
             if (!existing) {
+                console.log(`Inserting new player ID ${player.player.id} into 'players' table`);
                 await mysqlDatabase.query(`
                     INSERT INTO players (id, nom, photo_url, position, age, club, pays)
                     VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -89,6 +98,7 @@ export const handler = async (event) => {
                 ]);
             }
 
+            console.log(`Assigning player ID ${player.player.id} to user ID ${userId}`);
             await mysqlDatabase.query(
                 'INSERT INTO user_players (user_id, player_id) VALUES (?, ?)',
                 [userId, player.player.id]
