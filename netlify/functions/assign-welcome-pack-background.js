@@ -76,16 +76,16 @@ export const handler = async (event) => {
             if (!existing || existing.length === 0) {
                 console.log(`Player ${player.player.id} does not exist. Inserting into 'players' table.`);
                 await mysqlDatabase.query(`
-                    INSERT INTO players (id, name, firstname, lastname, age, nationality, photo)
+                    INSERT INTO players (id, nom, photo_url, position, age, club, pays)
                     VALUES (?, ?, ?, ?, ?, ?, ?)
                 `, [
                     player.player.id,
                     player.player.name,
-                    player.player.firstname,
-                    player.player.lastname,
-                    player.player.age,
-                    player.player.nationality,
-                    player.player.photo
+                    player.player.photo,
+                    player.statistics[0]?.games?.position || 'Unknown',
+                    player.player.age || 0,
+                    player.statistics[0]?.team?.name || 'Unknown',
+                    player.player.nationality || 'Unknown'
                 ]);
             }
 
