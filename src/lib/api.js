@@ -1,5 +1,5 @@
-import { clubIds } from './clubMappings.js';
-import { countryMappings } from './paysMappings.js';
+import clubIds from './clubMappings.js';
+import countryMappings from './paysMappings.js';
 
 // Constantes pour le proxy, l'ID de la ligue et la saison courante
 const PROXY_URL = 'https://kickleague-sveltekit.onrender.com/api';
