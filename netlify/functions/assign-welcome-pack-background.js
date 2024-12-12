@@ -1,4 +1,4 @@
-import mysqlDatabase from '../../src/lib/mysqlDatabase.js';
+import { mysqlDatabase } from '../../src/lib/mysqlDatabase.js';
 import { getPlayersFromPrimeiraLiga, getPlayersByClub, filterPlayersByCountry, selectPlayersByPosition } from '../../src/lib/api.js';
 
 const LEAGUE_ID = '94';
