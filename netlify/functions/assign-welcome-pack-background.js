@@ -13,23 +13,36 @@ export const handler = async (event) => {
 
         // Étape 1 : Vérifier si des joueurs sont déjà attribués
         const existingPlayers = await mysqlDatabase.query('SELECT 1 FROM user_players WHERE user_id = ?', [userId]);
+        console.log("Existing Players:", existingPlayers);  // Log pour voir la réponse SQL
+
         if (existingPlayers.length > 0) {
+            console.log("Players already assigned for user:", userId);
             return { 
                 statusCode: 200, 
-                body: JSON.stringify({ message: 'Players already assigned.' }) 
+                body: JSON.stringify({ message: 'Players already assigned.', players: existingPlayers }) 
             };
         }
 
         // Étape 2 : Récupérer les détails de l'utilisateur
-        const [userDetails] = await mysqlDatabase.query('SELECT club, pays FROM users WHERE id = ?', [userId]);
-        if (!userDetails) throw new Error("User not found");
+        const result = await mysqlDatabase.query('SELECT club, pays FROM users WHERE id = ?', [userId]);
+        if (!result || result.length === 0) {
+            throw new Error("User not found");
+        }
+        const { club, pays } = result[0];
 
-        const { club, pays } = userDetails;
 
         // Étape 3 : Synchroniser les joueurs
         const allPlayers = await getPlayersFromPrimeiraLiga(LEAGUE_ID, CURRENT_YEAR);
+        if (!allPlayers || allPlayers.length === 0) {
+            throw new Error("No players found for Primeira Liga.");
+        }
+
         const clubPlayers = await getPlayersByClub(club, CURRENT_YEAR);
+        console.log(`Players for club ${club}:`, clubPlayers);
+
         const countryPlayers = filterPlayersByCountry(allPlayers, pays);
+        console.log(`Players for country ${pays}:`, countryPlayers);
+
 
         // Étape 4 : Sélectionner les 8 joueurs (2 par position)
         const positions = ['Goalkeeper', 'Defender', 'Midfielder', 'Attacker'];

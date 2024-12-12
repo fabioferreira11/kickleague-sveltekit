@@ -58,13 +58,24 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userId })
             });
+            console.log("Raw background response:", backgroundResponse);
+
+            if (!backgroundResponse.ok) {
+                console.error("Background function failed:", backgroundResponse.status, backgroundResponse.statusText);
+                return;
+            }
 
             const result = await backgroundResponse.json();
-            console.log("Background Function Result:", result);
+            console.log("Parsed JSON response:", result);
 
             // Actualise les joueurs attribués après la fonction d'arrière-plan
-            players = await loadPlayers(userId);
-            console.log("Loaded Players :", players);
+            try {
+                players = await loadPlayers(userId);
+                console.log("Loaded Players :", players);
+            } catch (error) {
+                console.error("Error loading players:", error);
+                players = [];  // Initialise à un tableau vide en cas d'erreur
+            }
 
             updateTeamFilters();  // Mise à jour des filtres d'équipe
             checkDataTeamAttributes();  // Vérification des attributs des cartes
