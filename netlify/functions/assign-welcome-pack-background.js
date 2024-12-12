@@ -1,7 +1,7 @@
 import { mysqlDatabase } from '../../src/lib/mysqlDatabase.js';
 import { getPlayersFromPrimeiraLiga, getPlayersByClub, filterPlayersByCountry, selectPlayersByPosition } from '../../src/lib/api.js';
 import clubMappings from '../../src/lib/clubMappings.js'; // Importez le mappage des clubs
-import countryMappings from '../../src/lib/countryMappings.js'; // Importez le mappage des pays
+import countryMappings from '../../src/lib/paysMappings.js'; // Importez le mappage des pays
 
 const LEAGUE_ID = '94';
 const season = 2023;
