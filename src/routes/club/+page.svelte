@@ -53,7 +53,7 @@
             userId = sessionData.userid;
 
             // Déclenche la fonction d'arrière-plan pour l'attribution
-            const backgroundResponse = await fetch('/.netlify/functions/assign-welcome-pack-background', {
+            const backgroundResponse = await fetch('/.netlify/functions/assign-welcome-pack', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userId })
