@@ -1,6 +1,6 @@
 // Mappage des abréviations de clubs aux identifiants uniques
 // Chaque abréviation de club est associée à son identifiant respectif utilisé dans l'application
-cconst clubIds = {
+const clubIds = {
     'slb': 211,     // Benfica
     'scp': 228,     // Sporting
     'fcp': 212,     // Porto
