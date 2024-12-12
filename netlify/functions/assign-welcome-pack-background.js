@@ -1,6 +1,6 @@
 import { mysqlDatabase } from '../../src/lib/mysqlDatabase.js';
 import { getPlayersFromPrimeiraLiga, getPlayersByClub, filterPlayersByCountry, selectPlayersByPosition } from '../../src/lib/api.js';
-import clubMappings from '/src/lib/clubMappings.js';
+import clubMappings from '../../src/lib/clubMappings.js';
 import countryMappings from '../../src/lib/paysMappings.js';
 console.log('clubMappings content:', clubMappings);
 
