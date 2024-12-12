@@ -25,16 +25,22 @@ export const handler = async (event) => {
         const [userDetails] = await mysqlDatabase.query('SELECT club, pays FROM users WHERE id = ?', [userId]);
         if (!userDetails) throw new Error("User not found in the database.");
 
-        // Nettoyage des valeurs de club et pays
         let { club, pays } = userDetails;
+
+        // Nettoyage et validation des clés
         club = club.trim().toLowerCase();
         pays = pays.trim().toLowerCase();
 
         console.log(`User details: Club - ${club}, Pays - ${pays}`);
 
+        // Debug : afficher les clés disponibles dans clubMappings
+        console.log('Available club keys in clubMappings:', Object.keys(clubMappings));
+
         // Validation et mappage des valeurs
         const clubId = clubMappings[club];
-        if (!clubId) throw new Error(`Invalid club abbreviation: '${club}'`);
+        if (!clubId) {
+            throw new Error(`Invalid club abbreviation: '${club}'. Check available keys above.`);
+        }
 
         const country = countryMappings[pays] || pays;
         console.log(`Mapped values: Club ID - ${clubId}, Country - ${country}`);
