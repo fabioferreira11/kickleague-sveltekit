@@ -58,15 +58,20 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userId })
             });
+
             console.log("Raw background response:", backgroundResponse);
 
             if (!backgroundResponse.ok) {
-                console.error("Background function failed:", backgroundResponse.status, backgroundResponse.statusText);
-                return;
+                console.error(`Background function failed with status ${backgroundResponse.status}`);
+                return; // Stop ici pour éviter un appel .json() sur une réponse non valide
             }
 
-            const result = await backgroundResponse.json();
-            console.log("Parsed JSON response:", result);
+            try {
+                const result = await backgroundResponse.json();
+                console.log("Parsed JSON response:", result);
+            } catch (error) {
+                console.error("Failed to parse JSON:", error);
+            }
 
             // Actualise les joueurs attribués après la fonction d'arrière-plan
             try {
