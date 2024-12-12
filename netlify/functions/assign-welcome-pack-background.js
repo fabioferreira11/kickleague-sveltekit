@@ -28,8 +28,8 @@ export const handler = async (event) => {
         let { club, pays } = userDetails;
 
         // Nettoyage et validation des clés
-        club = club.trim().toLowerCase();
-        pays = pays.trim().toLowerCase();
+        club = String(club).trim().toLowerCase();
+        pays = String(pays).trim().toLowerCase();
 
         console.log(`User details: Club - ${club}, Pays - ${pays}`);
 
