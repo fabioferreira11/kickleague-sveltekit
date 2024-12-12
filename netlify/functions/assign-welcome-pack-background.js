@@ -1,6 +1,6 @@
 import { mysqlDatabase } from '../../src/lib/mysqlDatabase.js';
 import { getPlayersFromPrimeiraLiga, getPlayersByClub, filterPlayersByCountry, selectPlayersByPosition } from '../../src/lib/api.js';
-import clubMappings from '../../src/lib/clubMappings.js'; // Importez le mappage des clubs
+import clubIds from '../../src/lib/clubMappings.js'; // Importez le mappage des clubs
 import countryMappings from '../../src/lib/paysMappings.js'; // Importez le mappage des pays
 
 const LEAGUE_ID = '94';
@@ -27,7 +27,7 @@ export const handler = async (event) => {
         let { club, pays } = result[0];
 
         // Convertir l'abréviation du club en ID
-        const clubId = clubMappings[club];
+        const clubId = clubIds[club];
         if (!clubId) throw new Error(`Invalid club abbreviation: ${club}`);
 
         // Convertir le nom du pays en anglais
