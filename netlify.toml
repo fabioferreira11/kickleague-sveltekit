@@ -1,6 +1,7 @@
 [build]
-	command = "npm run build"
-	publish = "build"
+  command = "npm run build"
+  publish = "build"
 
 [functions]
-	directory = ".netlify/functions-internal" 
+  directory = "netlify/functions"  # Remplace functions-internal par le bon répertoire
+  included_files = ["./mysqlDatabase.js", "./api.js"]  # Inclut les fichiers nécessaires

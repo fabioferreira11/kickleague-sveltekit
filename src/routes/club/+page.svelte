@@ -48,21 +48,21 @@
         });
         const sessionData = await sessionResponse.json();
         console.log("Session Data:", sessionData);
+
         if (sessionResponse.ok) {
             userId = sessionData.userid;
 
-            // Appel API pour obtenir le pack de joueur
-            const getPlayerPackResponse = await fetch('/api/getPlayerPack', {
+            // Déclenche la fonction d'arrière-plan pour l'attribution
+            const backgroundResponse = await fetch('/.netlify/functions/assign-welcome-pack-background', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userId })
             });
-            const getPlayerPackData = await getPlayerPackResponse.json();
-            console.log("getPlayerPack Response:", getPlayerPackData);
 
-            // Chargement des joueurs pour l'utilisateur
+            const result = await backgroundResponse.json();
+            console.log("Background Function Result:", result);
+
+            // Actualise les joueurs attribués après la fonction d'arrière-plan
             players = await loadPlayers(userId);
             console.log("Loaded Players :", players);
 
