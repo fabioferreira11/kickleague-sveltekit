@@ -1,11 +1,10 @@
-import fetch from 'node-fetch';
-import mysqlDatabase from './mysqlDatabase'; // Import de la connexion MySQL
+import mysqlDatabase from './mysqlDatabase';
 import { getPlayersFromPrimeiraLiga, getPlayersByClub, filterPlayersByCountry, selectPlayersByPosition } from './api';
 
 const LEAGUE_ID = '94';
 const CURRENT_YEAR = 2023;
 
-exports.handler = async (event) => {
+export const handler = async (event) => {
     try {
         // Extraction des données de la requête
         const { userId } = JSON.parse(event.body);
@@ -15,7 +14,10 @@ exports.handler = async (event) => {
         // Étape 1 : Vérifier si des joueurs sont déjà attribués
         const existingPlayers = await mysqlDatabase.query('SELECT 1 FROM user_players WHERE user_id = ?', [userId]);
         if (existingPlayers.length > 0) {
-            return { statusCode: 200, body: JSON.stringify({ message: 'Players already assigned.' }) };
+            return { 
+                statusCode: 200, 
+                body: JSON.stringify({ message: 'Players already assigned.' }) 
+            };
         }
 
         // Étape 2 : Récupérer les détails de l'utilisateur
@@ -49,9 +51,15 @@ exports.handler = async (event) => {
         await Promise.all(queries);
 
         console.log(`Players assigned to user ${userId}`);
-        return { statusCode: 200, body: JSON.stringify({ message: 'Players successfully assigned.' }) };
+        return { 
+            statusCode: 200, 
+            body: JSON.stringify({ message: 'Players successfully assigned.' }) 
+        };
     } catch (error) {
         console.error('Error in background function:', error);
-        return { statusCode: 500, body: JSON.stringify({ error: error.message }) };
+        return { 
+            statusCode: 500, 
+            body: JSON.stringify({ error: error.message }) 
+        };
     }
 };
