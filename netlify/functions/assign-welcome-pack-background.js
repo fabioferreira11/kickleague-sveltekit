@@ -1,5 +1,5 @@
-import mysqlDatabase from './mysqlDatabase';
-import { getPlayersFromPrimeiraLiga, getPlayersByClub, filterPlayersByCountry, selectPlayersByPosition } from './api';
+import mysqlDatabase from '../../src/lib/mysqlDatabase.js';
+import { getPlayersFromPrimeiraLiga, getPlayersByClub, filterPlayersByCountry, selectPlayersByPosition } from '../../src/lib/api.js';
 
 const LEAGUE_ID = '94';
 const CURRENT_YEAR = 2023;
