@@ -46,18 +46,13 @@ export const handler = async (event) => {
 
         // Récupération des joueurs
         const allPlayers = await getPlayersFromPrimeiraLiga(LEAGUE_ID, season);
-
-        // Filtrer uniquement les joueurs ACTUELS dans la ligue portugaise
-        const portugueseLeaguePlayers = allPlayers.filter(player =>
-            player.statistics?.some(stat => stat.league?.id === Number(LEAGUE_ID))
+        
+        // Filtrer les joueurs selon l'ID du club
+        const clubPlayers = allPlayers.filter(player => 
+            player.statistics[0]?.team?.id === clubId
         );
 
-        // Filtrer les joueurs qui jouent actuellement dans le club choisi
-        const clubPlayers = portugueseLeaguePlayers.filter(player =>
-            player.statistics?.some(stat => stat.team?.id === clubId)
-        );
-
-        const countryPlayers = filterPlayersByCountry(portugueseLeaguePlayers, country);
+        const countryPlayers = filterPlayersByCountry(allPlayers, country);
 
         console.log(`Fetched players count: Club (${clubPlayers.length}), Country (${countryPlayers.length})`);
 
@@ -66,20 +61,11 @@ export const handler = async (event) => {
         let selectedPlayers = [];
 
         for (let position of positions) {
-            // Priorité aux joueurs du club pour chaque position
-            let fromClub = await selectPlayersByPosition(clubPlayers, position, 2);
-            let remaining = 2 - fromClub.length;
+            let fromClub = await selectPlayersByPosition(clubPlayers, position, 1);
+            let fromCountry = await selectPlayersByPosition(countryPlayers, position, 1);
+            let remaining = 2 - (fromClub.length + fromCountry.length);
+            let additional = await selectPlayersByPosition(allPlayers, position, remaining);
 
-            // Ensuite, compléter avec les joueurs du pays s'il manque des joueurs
-            let fromCountry = remaining > 0 ? 
-                await selectPlayersByPosition(countryPlayers, position, remaining) : [];
-
-            // Compléter avec des joueurs de la ligue portugaise si nécessaire
-            remaining = 2 - (fromClub.length + fromCountry.length);
-            let additional = remaining > 0 ? 
-                await selectPlayersByPosition(portugueseLeaguePlayers, position, remaining) : [];
-
-            // Ajouter les joueurs sélectionnés à la liste finale
             selectedPlayers.push(...fromClub, ...fromCountry, ...additional);
         }
 
