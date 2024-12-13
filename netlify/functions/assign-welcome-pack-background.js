@@ -16,12 +16,14 @@ export const handler = async (event) => {
 
         console.log(`Starting background process for user ID: ${userId}`);
 
+        // Vérification des joueurs déjà assignés
         const existingPlayers = await mysqlDatabase.query('SELECT 1 FROM user_players WHERE user_id = ?', [userId]);
         if (existingPlayers.length > 0) {
             console.log(`Players already assigned to user ${userId}`);
             return { statusCode: 200, body: JSON.stringify({ message: 'Players already assigned.' }) };
         }
 
+        // Récupération des informations utilisateur
         const [userDetails] = await mysqlDatabase.query('SELECT club, pays FROM users WHERE id = ?', [userId]);
         if (!userDetails) throw new Error("User not found in the database.");
 
@@ -29,20 +31,27 @@ export const handler = async (event) => {
         club = String(club).trim().toLowerCase();
         pays = String(pays).trim().toLowerCase();
 
+        console.log(`Pays avant mapping : '${pays}'`);
+        console.log("Contenu de countryMappings :", countryMappings);
+
+        // Vérification du mappage des clubs et pays
         const clubId = clubMappings[club];
         if (!clubId) throw new Error(`Invalid club abbreviation: '${club}'`);
 
-        const country = countryMappings[pays] || pays;
-        console.log(`Original country value: '${pays}'`);
-        console.log(`Mapped country value: '${country}'`);
+        const country = pays in countryMappings ? countryMappings[pays] : pays;
+
+        console.log(`Clé existe dans countryMappings :`, countryMappings.hasOwnProperty(pays));
+        console.log(`Mapped country value : '${country}'`);
         console.log(`Mapped values: Club ID - ${clubId}, Country - ${country}`);
 
+        // Récupération des joueurs
         const allPlayers = await getPlayersFromPrimeiraLiga(LEAGUE_ID, season);
         const clubPlayers = await getPlayersByClub(clubId, season);
         const countryPlayers = filterPlayersByCountry(allPlayers, country);
 
         console.log(`Fetched players count: Club (${clubPlayers.length}), Country (${countryPlayers.length})`);
 
+        // Sélection des joueurs par position
         const positions = ['Goalkeeper', 'Defender', 'Midfielder', 'Attacker'];
         let selectedPlayers = [];
 
@@ -58,6 +67,7 @@ export const handler = async (event) => {
         const finalPlayers = selectedPlayers.slice(0, 8);
         console.log(`Final selected players:`, finalPlayers);
 
+        // Insertion des joueurs dans la base de données
         for (let player of finalPlayers) {
             const [existing] = await mysqlDatabase.query('SELECT id FROM players WHERE id = ?', [player.player.id]);
             if (!existing) {
