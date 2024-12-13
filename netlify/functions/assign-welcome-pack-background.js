@@ -1,7 +1,11 @@
 import { mysqlDatabase } from '../../src/lib/mysqlDatabase.js';
 import { getPlayersFromPrimeiraLiga, getPlayersByClub, filterPlayersByCountry, selectPlayersByPosition } from '../../src/lib/api.js';
-import clubMappings from '../../src/lib/clubMappings.js';
+import clubMappingsModule from '../../src/lib/clubMappings.js';
 import countryMappings from '../../src/lib/paysMappings.js';
+
+// Gestion de l'importation de clubMappings pour éviter le problème avec "default"
+const clubMappings = clubMappingsModule.default || clubMappingsModule;
+
 console.log('clubMappings content:', clubMappings);
 
 const LEAGUE_ID = '94';
