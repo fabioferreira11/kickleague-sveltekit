@@ -1,9 +1,10 @@
 import { mysqlDatabase } from '../../src/lib/mysqlDatabase.js';
 import { getPlayersFromPrimeiraLiga, getPlayersByClub, filterPlayersByCountry, selectPlayersByPosition } from '../../src/lib/api.js';
 import clubMappingsModule from '../../src/lib/clubMappings.js';
-import countryMappings from '../../src/lib/paysMappings.js';
+import countryMappingsModule from '../../src/lib/paysMappings.js';
 
 const clubMappings = clubMappingsModule.default || clubMappingsModule;
+const countryMappings = countryMappingsModule.default || countryMappingsModule;
 
 const LEAGUE_ID = '94';
 const season = 2023;
@@ -38,9 +39,9 @@ export const handler = async (event) => {
         const clubId = clubMappings[club];
         if (!clubId) throw new Error(`Invalid club abbreviation: '${club}'`);
 
-        const country = pays in countryMappings ? countryMappings[pays] : pays;
+        const country = countryMappings.hasOwnProperty(pays) ? countryMappings[pays] : pays;
 
-        console.log(`Clé existe dans countryMappings :`, countryMappings.hasOwnProperty(pays));
+        console.log(`Clé existe dans countryMappings : ${countryMappings.hasOwnProperty(pays)}`);
         console.log(`Mapped country value : '${country}'`);
         console.log(`Mapped values: Club ID - ${clubId}, Country - ${country}`);
 
