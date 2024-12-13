@@ -1,5 +1,5 @@
 import { mysqlDatabase } from '../../src/lib/mysqlDatabase.js';
-import { getPlayersFromPrimeiraLiga, getPlayersByClub, filterPlayersByCountry, selectPlayersByPosition } from '../../src/lib/api.js';
+import { getPlayersFromPrimeiraLiga, filterPlayersByCountry, selectPlayersByPosition } from '../../src/lib/api.js';
 import clubMappingsModule from '../../src/lib/clubMappings.js';
 import countryMappingsModule from '../../src/lib/paysMappings.js';
 
@@ -41,13 +41,17 @@ export const handler = async (event) => {
 
         const country = countryMappings.hasOwnProperty(pays) ? countryMappings[pays] : pays;
 
-        console.log(`Clé existe dans countryMappings : ${countryMappings.hasOwnProperty(pays)}`);
         console.log(`Mapped country value : '${country}'`);
         console.log(`Mapped values: Club ID - ${clubId}, Country - ${country}`);
 
         // Récupération des joueurs
         const allPlayers = await getPlayersFromPrimeiraLiga(LEAGUE_ID, season);
-        const clubPlayers = await getPlayersByClub(clubId, season);
+        
+        // Filtrer les joueurs selon l'ID du club
+        const clubPlayers = allPlayers.filter(player => 
+            player.statistics[0]?.team?.id === clubId
+        );
+
         const countryPlayers = filterPlayersByCountry(allPlayers, country);
 
         console.log(`Fetched players count: Club (${clubPlayers.length}), Country (${countryPlayers.length})`);
