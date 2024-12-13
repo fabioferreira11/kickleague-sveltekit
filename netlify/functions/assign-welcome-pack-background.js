@@ -1,115 +1,117 @@
-import clubIds from './clubMappings';
-import countryMappings from './paysMappings.js';
+import { mysqlDatabase } from '../../src/lib/mysqlDatabase.js';
+import { getPlayersFromPrimeiraLiga, filterPlayersByCountry, selectPlayersByPosition } from '../../src/lib/api.js';
+import clubMappingsModule from '../../src/lib/clubMappings.js';
+import countryMappingsModule from '../../src/lib/paysMappings.js';
 
-// Constantes pour le proxy, l'ID de la ligue et la saison courante
-const PROXY_URL = 'https://kickleague-sveltekit.onrender.com/api';
-// const PROXY_URL = 'http://localhost:3000/api';
+const clubMappings = clubMappingsModule.default || clubMappingsModule;
+const countryMappings = countryMappingsModule.default || countryMappingsModule;
+
 const LEAGUE_ID = '94';
 const season = 2023;
 
-// Fonction utilitaire pour effectuer une requête API via un proxy
-async function fetchAPI(url) {
-    console.log(`Fetching URL via proxy: ${url}`);
+export const handler = async (event) => {
     try {
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(`Network response was not ok: ${response.statusText}`);
+        if (!event.body) throw new Error("Request body is missing.");
+        const { userId } = JSON.parse(event.body);
+        if (!userId) throw new Error("User ID is missing in the request body.");
+
+        console.log(`Starting background process for user ID: ${userId}`);
+
+        // Vérification des joueurs déjà assignés
+        const existingPlayers = await mysqlDatabase.query('SELECT 1 FROM user_players WHERE user_id = ?', [userId]);
+        if (existingPlayers.length > 0) {
+            console.log(`Players already assigned to user ${userId}`);
+            return { statusCode: 200, body: JSON.stringify({ message: 'Players already assigned.' }) };
         }
-        const data = await response.json();
-        console.log(`Data fetched via proxy for url ${url}:`, data);
-        return data;
+
+        // Récupération des informations utilisateur
+        const [userDetails] = await mysqlDatabase.query('SELECT club, pays FROM users WHERE id = ?', [userId]);
+        if (!userDetails) throw new Error("User not found in the database.");
+
+        let { club, pays } = userDetails;
+        club = String(club).trim().toLowerCase();
+        pays = String(pays).trim().toLowerCase();
+
+        console.log(`Pays avant mapping : '${pays}'`);
+        console.log("Contenu de countryMappings :", countryMappings);
+
+        // Vérification du mappage des clubs et pays
+        const clubId = clubMappings[club];
+        if (!clubId) throw new Error(`Invalid club abbreviation: '${club}'`);
+
+        const country = countryMappings.hasOwnProperty(pays) ? countryMappings[pays] : pays;
+
+        console.log(`Mapped country value : '${country}'`);
+        console.log(`Mapped values: Club ID - ${clubId}, Country - ${country}`);
+
+        // Récupération des joueurs
+        const allPlayers = await getPlayersFromPrimeiraLiga(LEAGUE_ID, season);
+
+        // Filtrer les joueurs qui jouent actuellement dans le club choisi
+        const clubPlayers = allPlayers.filter(player =>
+            player.statistics?.some(stat => stat.team?.id === clubId)
+        );
+
+        const countryPlayers = filterPlayersByCountry(allPlayers, country);
+
+        console.log(`Fetched players count: Club (${clubPlayers.length}), Country (${countryPlayers.length})`);
+
+        // Sélection des joueurs par position
+        const positions = ['Goalkeeper', 'Defender', 'Midfielder', 'Attacker'];
+        let selectedPlayers = [];
+
+        for (let position of positions) {
+            // Priorité aux joueurs du club pour chaque position
+            let fromClub = await selectPlayersByPosition(clubPlayers, position, 2);
+            let remaining = 2 - fromClub.length;
+
+            // Ensuite, compléter avec les joueurs du pays s'il manque des joueurs
+            let fromCountry = remaining > 0 ? 
+                await selectPlayersByPosition(countryPlayers, position, remaining) : [];
+
+            // Compléter avec des joueurs de la ligue si nécessaire
+            remaining = 2 - (fromClub.length + fromCountry.length);
+            let additional = remaining > 0 ? 
+                await selectPlayersByPosition(allPlayers, position, remaining) : [];
+
+            // Ajouter les joueurs sélectionnés à la liste finale
+            selectedPlayers.push(...fromClub, ...fromCountry, ...additional);
+        }
+
+        const finalPlayers = selectedPlayers.slice(0, 8);
+        console.log(`Final selected players:`, finalPlayers);
+
+        // Insertion des joueurs dans la base de données
+        for (let player of finalPlayers) {
+            const [existing] = await mysqlDatabase.query('SELECT id FROM players WHERE id = ?', [player.player.id]);
+            if (!existing) {
+                await mysqlDatabase.query(`
+                    INSERT INTO players (id, nom, photo_url, position, age, club, pays)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                `, [
+                    player.player.id,
+                    player.player.name,
+                    player.player.photo,
+                    player.statistics[0]?.games?.position || 'Unknown',
+                    player.player.age || 0,
+                    player.statistics[0]?.team?.name || 'Unknown',
+                    player.player.nationality || 'Unknown'
+                ]);
+            }
+            await mysqlDatabase.query(
+                'INSERT INTO user_players (user_id, player_id) VALUES (?, ?)',
+                [userId, player.player.id]
+            );
+        }
+
+        console.log(`Players successfully assigned for user ${userId}`);
+        return {
+            statusCode: 200,
+            body: JSON.stringify({ message: 'Players successfully assigned.', players: finalPlayers }),
+        };
+
     } catch (error) {
-        console.error("Fetch error:", error);
-        throw error;
+        console.error('Error in background function:', error);
+        return { statusCode: 500, body: JSON.stringify({ error: error.message }) };
     }
-}
-
-// Fonction pour obtenir les joueurs d'un club spécifique pour une saison donnée
-export async function getPlayersByClub(clubName, season) {
-    const clubId = clubIds[clubName];
-    if (!clubId) {
-        console.error("No valid ID found for club:", clubName);
-        return [];
-    }
-
-    console.log(`Fetching players for club ${clubName} with ID ${clubId}`);
-    const allPlayers = await fetchPlayersByQuery(`season=${season}`);
-    
-    // Filtrer les joueurs qui jouent actuellement dans le club
-    const currentClubPlayers = allPlayers.filter(player =>
-        player.statistics?.some(stat => stat.team?.id === clubId)
-    );
-
-    console.log(`Players currently in club ${clubName} (${clubId}): ${currentClubPlayers.length}`);
-    return currentClubPlayers;
-}
-
-// Fonction pour obtenir les joueurs de la ligue portugaise pour une saison donnée
-export async function getPlayersFromPrimeiraLiga(leagueId, season) {
-    console.log(`Fetching players from Primeira Liga for season ${season}`);
-    return await fetchPlayersByQuery(`league=${leagueId}&season=${season}`);
-}
-
-// Fonction utilitaire pour récupérer les joueurs en fonction d'une requête
-async function fetchPlayersByQuery(query) {
-    let allPlayers = [];
-    let page = 1;
-    let hasMore = true;
-    console.log(`Starting fetch query: ${query}`);
-    while (hasMore) {
-        const url = `${PROXY_URL}/players?${query}&page=${page}`;
-        const data = await fetchAPI(url);
-        if (data.response) {
-            allPlayers = allPlayers.concat(data.response);
-            console.log(`Page ${page}: ${data.response.length} players fetched`);
-            hasMore = data.paging.current < data.paging.total;
-            page++;
-        } else {
-            console.log(`No more data available after page ${page}`);
-            hasMore = false;
-        }
-    }
-    console.log(`Total players fetched with query ${query}: ${allPlayers.length}`);
-    return allPlayers;
-}
-
-// Fonction pour filtrer les joueurs par pays
-export function filterPlayersByCountry(players, country) {
-    console.log(`Filtering players for country: ${country}`);
-    const filtered = players.filter(player => player.player.nationality === country);
-    console.log(`Filtered players count for ${country}: ${filtered.length}`);
-    return filtered;
-}
-
-// Fonction pour sélectionner des joueurs en fonction de leur position
-export async function selectPlayersByPosition(players, position, count) {
-    console.log(`Selecting up to ${count} players for position ${position}`);
-    if (!Array.isArray(players)) {
-        console.error("Expected array of players, received:", players);
-        return [];
-    }
-    const selected = players.filter(player => 
-        player.statistics?.some(stat => stat.games?.position === position)
-    ).slice(0, count);
-    console.log(`Selected ${selected.length} players for position ${position}`);
-    return selected;
-}
-
-// Fonction pour obtenir le prochain match d'une équipe spécifique
-export async function getNextMatchByTeam(teamId) {
-    const url = `${PROXY_URL}/fixtures?team=${teamId}&next=1`;
-    console.log(`Fetching next match for team ID ${teamId}`);
-    try {
-        const response = await fetchAPI(url);
-        if (response.response && response.response.length > 0) {
-            console.log(`Next match data for team ID ${teamId}:`, response.response[0]);
-            return response.response[0];
-        } else {
-            console.log(`No upcoming match found for team ID ${teamId}`);
-            return null;
-        }
-    } catch (error) {
-        console.error(`Error fetching next match for team ID ${teamId}:`, error);
-        throw error;
-    }
-}
+};
