@@ -5,7 +5,7 @@ import countryMappings from './paysMappings.js';
 const PROXY_URL = 'https://kickleague-sveltekit.onrender.com/api';
 // const PROXY_URL = 'http://localhost:3000/api';
 const LEAGUE_ID = '94';
-const season = 2024;
+const season = 2023;
 
 // Fonction utilitaire pour effectuer une requête API via un proxy
 async function fetchAPI(url) {
@@ -32,33 +32,13 @@ export async function getPlayersByClub(clubName, season) {
         return [];
     }
     console.log(`Fetching players for club ${clubName} with ID ${clubId}`);
-    const allPlayers = await fetchPlayersByQuery(`team=${clubId}&season=${season}`);
-
-    // Filtrer pour ne garder que les joueurs ACTUELLEMENT dans le club choisi
-    const filteredPlayers = allPlayers.filter(player =>
-        player.statistics?.some(stat =>
-            stat.team?.id === Number(clubId) &&
-            stat.league?.id === Number(LEAGUE_ID) // Assurer que la ligue est Primeira Liga
-        )
-    );
-    console.log(`Filtered players currently playing for club ${clubName}: ${filteredPlayers.length}`);
-    return filteredPlayers;
+    return await fetchPlayersByQuery(`team=${clubId}&season=${season}`);
 }
 
 // Fonction pour obtenir les joueurs de la ligue portugaise pour une saison donnée
 export async function getPlayersFromPrimeiraLiga(leagueId, season) {
     console.log(`Fetching players from Primeira Liga for season ${season}`);
-    const allPlayers = await fetchPlayersByQuery(`league=${leagueId}&season=${season}`);
-
-    // Filtrer pour ne garder que les joueurs ACTUELS dans la ligue portugaise
-    const filteredPlayers = allPlayers.filter(player =>
-        player.statistics?.some(stat =>
-            stat.league?.id === Number(leagueId) &&
-            stat.team?.id !== null // Vérifie que l'équipe existe
-        )
-    );
-    console.log(`Filtered players currently playing in Primeira Liga: ${filteredPlayers.length}`);
-    return filteredPlayers;
+    return await fetchPlayersByQuery(`league=${leagueId}&season=${season}`);
 }
 
 // Fonction pour obtenir les données d'un joueur spécifique pour une saison donnée

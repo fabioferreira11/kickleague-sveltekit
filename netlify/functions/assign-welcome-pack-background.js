@@ -7,7 +7,7 @@ const clubMappings = clubMappingsModule.default || clubMappingsModule;
 const countryMappings = countryMappingsModule.default || countryMappingsModule;
 
 const LEAGUE_ID = '94';
-const season = 2024;
+const season = 2023;
 
 export const handler = async (event) => {
     try {
