@@ -31,7 +31,7 @@
         if (!mdp.trim()) {
             erreurMdp = 'Veuillez introduire un mot de passe.';
         } else if (!passwordRegex.test(mdp)) {
-            erreurMdp = 'Le mot de passe doit contenir au moins 8 caractères, une lettre et un chiffre.';
+            erreurMdp = 'Le mot de passe doit contenir au moins 8 caractères dont une lettre et un chiffre.';
         } else {
             erreurMdp = '';
         }
