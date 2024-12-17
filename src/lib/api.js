@@ -5,7 +5,7 @@ import countryMappings from './paysMappings.js';
 const PROXY_URL = 'https://kickleague-sveltekit.onrender.com/api';
 // const PROXY_URL = 'http://localhost:3000/api';
 const LEAGUE_ID = '94';
-const season = 2024;
+const season = 2024; 
 
 // Fonction utilitaire pour effectuer une requête API via un proxy
 async function fetchAPI(url) {
