@@ -16,8 +16,8 @@
     let erreurConfirmMdp = '';
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // Regex pour valider l'adresse email
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/; // Regex pour mot de passe sécurisé
 
-    // Fonction de validation des champs du formulaire
     function validateFields() {
         const currentYear = new Date().getFullYear();
         const birthYear = new Date(dateNaissance).getFullYear();
@@ -26,14 +26,24 @@
         erreurPseudo = pseudo.trim() ? '' : 'Veuillez introduire un pseudo.';
         erreurDateNaissance = dateNaissance ? '' : 'Veuillez introduire votre date de naissance.';
         erreurEmail = email.trim() && emailRegex.test(email) ? '' : 'Veuillez introduire une adresse email valide.';
-        erreurMdp = mdp.trim() ? '' : 'Veuillez introduire un mot de passe.';
+
+        // Vérification du mot de passe avec la regex
+        if (!mdp.trim()) {
+            erreurMdp = 'Veuillez introduire un mot de passe.';
+        } else if (!passwordRegex.test(mdp)) {
+            erreurMdp = 'Le mot de passe doit contenir au moins 8 caractères, une lettre et un chiffre.';
+        } else {
+            erreurMdp = '';
+        }
+
         erreurConfirmMdp = confirmMdp.trim() ? '' : 'Veuillez confirmer votre mot de passe.';
 
-        // Validation supplémentaire pour la date de naissance et la correspondance des mots de passe
+        // Validation de la correspondance des mots de passe
         if (mdp && confirmMdp && mdp !== confirmMdp) {
             erreurConfirmMdp = 'Votre mot de passe ne correspond pas.';
         }
 
+        // Validation supplémentaire pour la date de naissance
         if (birthYear > currentYear) {
             erreurDateNaissance = 'Veuillez introduire une date de naissance valide.';
         } else if (birthYear > 2015) {
