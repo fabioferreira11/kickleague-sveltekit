@@ -72,14 +72,23 @@
             }
 
             try {
-                const result = await backgroundResponse.json();
-                console.log("Parsed JSON response:", result);
+                const text = await backgroundResponse.text(); // Récupère la réponse en texte brut
+                if (!text) {
+                    console.warn("Réponse vide reçue du serveur, mais attribution probablement réussie.");
+                    infoMessage = "Fin de l'attribution de joueur : Vos joueurs vous ont été attribués, vous pouvez aller ouvrir votre pack dans la page pack.";
+                } else {
+                    const result = JSON.parse(text); // Analyse le texte seulement s'il existe
+                    console.log("Parsed JSON response:", result);
 
-                // Mise à jour du message lorsque le processus est terminé
-                infoMessage = "Fin de l'attribution de joueur : Vos joueurs vous ont été attribués, vous pouvez aller ouvrir votre pack dans la page pack.";
+                    if (result.message?.toLowerCase().includes("success")) {
+                        infoMessage = "Fin de l'attribution de joueur : Vos joueurs vous ont été attribués, vous pouvez aller ouvrir votre pack dans la page pack.";
+                    } else {
+                        infoMessage = "Erreur : L'attribution des joueurs a échoué. Veuillez réessayer.";
+                    }
+                }
             } catch (error) {
-                console.error("Failed to parse JSON:", error);
-                infoMessage = "Erreur : L'attribution des joueurs a échoué. Veuillez réessayer.";
+                console.error("Erreur pendant l'analyse JSON ou la réponse :", error);
+                infoMessage = "Erreur : Une erreur est survenue lors de l'attribution. Veuillez réessayer.";
             }
 
             // Actualise les joueurs attribués après la fonction d'arrière-plan
