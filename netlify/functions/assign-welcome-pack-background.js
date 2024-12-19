@@ -11,9 +11,33 @@ const season = 2024;
 
 export const handler = async (event) => {
     try {
-        if (!event.body) throw new Error("Request body is missing.");
-        const { userId } = JSON.parse(event.body);
-        if (!userId) throw new Error("User ID is missing in the request body.");
+        // Vérification que le body existe et est valide
+        if (!event.body) {
+            console.error("Request body is missing.");
+            return {
+                statusCode: 400,
+                body: JSON.stringify({ status: 'error', message: "Request body is missing." })
+            };
+        }
+
+        let parsedBody;
+        try {
+            parsedBody = JSON.parse(event.body); // Essaye de parser le corps JSON
+        } catch (err) {
+            console.error("Failed to parse JSON body:", err);
+            return {
+                statusCode: 400,
+                body: JSON.stringify({ status: 'error', message: "Invalid JSON body." })
+            };
+        }
+
+        const { userId } = parsedBody;
+        if (!userId) {
+            return {
+                statusCode: 400,
+                body: JSON.stringify({ status: 'error', message: "User ID is missing in the request body." })
+            };
+        }
 
         console.log(`Starting background process for user ID: ${userId}`);
 

@@ -53,8 +53,14 @@
         const sessionData = await sessionResponse.json();
         console.log("Session Data:", sessionData);
 
-        if (sessionResponse.ok) {
+        if (sessionResponse.ok && sessionData.userid) {
             userId = sessionData.userid;
+
+            // Vérification supplémentaire avant d'envoyer la requête
+            if (!userId) {
+                console.error("User ID is missing, cannot proceed with background task.");
+                return;
+            }
 
             // Déclenche la fonction d'arrière-plan pour l'attribution
             const backgroundResponse = await fetch('/.netlify/functions/assign-welcome-pack-background', {
