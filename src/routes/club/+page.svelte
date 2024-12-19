@@ -46,56 +46,61 @@
 
     // Code exécuté au montage du composant
     onMount(async () => {
+        // Vérifie si l'utilisateur a déjà vu le message
         const hasSeenMessage = localStorage.getItem('hasSeenInfoMessage');
-
-        // Toujours afficher le message au premier chargement
         if (!hasSeenMessage) {
             showInfoMessage = true;
             infoMessage = "Information importante : Vos premiers joueurs sont en train de vous être attribués, veuillez rester sur la page club en attendant la fin de l'attribution.";
         }
 
-        try {
-            // Récupération des informations de session
-            const sessionResponse = await fetch('/api/session', { method: 'GET', credentials: 'include' });
-            const sessionData = await sessionResponse.json();
+        const sessionResponse = await fetch('/api/session', {
+            method: 'GET',
+            credentials: 'include'
+        });
+        const sessionData = await sessionResponse.json();
+        console.log("Session Data:", sessionData);
 
-            if (sessionResponse.ok) {
-                userId = sessionData.userid;
+        if (sessionResponse.ok) {
+            userId = sessionData.userid;
 
-                // Déclenchement du processus d'attribution
-                const backgroundResponse = await fetch('/.netlify/functions/assign-welcome-pack-background', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId })
-                });
+            // Déclenche la fonction d'arrière-plan pour l'attribution
+            const backgroundResponse = await fetch('/.netlify/functions/assign-welcome-pack-background', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId })
+            });
 
-                if (backgroundResponse.ok) {
-                    const result = await backgroundResponse.json();
+            console.log("Raw background response:", backgroundResponse);
 
-                    // Succès de l'attribution
-                    if (result.message?.toLowerCase().includes("success")) {
-                        infoMessage = "Fin de l'attribution de joueur : Vos joueurs vous ont été attribués, vous pouvez aller ouvrir votre pack dans la page pack.";
-                    } else {
-                        // Message d'échec si résultat inattendu
-                        infoMessage = "Erreur : L'attribution des joueurs a échoué. Veuillez réessayer.";
-                    }
+            if (!backgroundResponse.ok) {
+                console.error(`Background function failed with status ${backgroundResponse.status}`);
+                return; // Stop ici pour éviter un appel .json() sur une réponse non valide
+            }
+
+            try {
+                const result = await backgroundResponse.json();
+                console.log("Parsed JSON response:", result);
+
+                // Vérifie si le processus a réussi
+                if (backgroundResponse.ok && result.message === "Players successfully assigned.") {
+                    infoMessage = "Fin de l'attribution de joueur : Vos joueurs vous ont été attribués, vous pouvez aller ouvrir votre pack dans la page pack.";
                 } else {
-                    // Si le serveur retourne un statut d'erreur
                     infoMessage = "Erreur : L'attribution des joueurs a échoué. Veuillez réessayer.";
                 }
-
-                // Mise à jour des joueurs
-                players = await loadPlayers(userId);
-
-                // Cacher le message après 10 secondes seulement si tout a fonctionné
-                setTimeout(() => {
-                    showInfoMessage = false;
-                    localStorage.setItem('hasSeenInfoMessage', 'true');
-                }, 10000);
+            } catch (error) {
+                console.error("Failed to parse JSON:", error);
+                infoMessage = "Erreur : L'attribution des joueurs a échoué. Veuillez réessayer.";
             }
-        } catch (error) {
-            console.error("Une erreur est survenue :", error);
-            infoMessage = "Erreur : Une erreur inattendue est survenue. Veuillez actualiser la page.";
+
+            // Actualise les joueurs attribués après la fonction d'arrière-plan
+            try {
+                players = await loadPlayers(userId);
+                console.log("Loaded Players :", players);
+                setTimeout(() => showInfoMessage = false, 10000); // Cache le message après 10 secondes
+            } catch (error) {
+                console.error("Error loading players:", error);
+                players = [];  // Initialise à un tableau vide en cas d'erreur
+            }
 
             updateTeamFilters();  // Mise à jour des filtres d'équipe
             checkDataTeamAttributes();  // Vérification des attributs des cartes
