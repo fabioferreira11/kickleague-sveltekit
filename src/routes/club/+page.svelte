@@ -79,13 +79,19 @@
 
             try {
                 const result = await backgroundResponse.json();
-                console.log("Parsed JSON response:", result); // Log pour vérifier ce qui est renvoyé par l'API
+                console.log("Parsed JSON response:", result);
 
                 // Vérifie si le message d'API contient un succès
                 if (backgroundResponse.ok && result.message?.toLowerCase().includes("success")) {
                     infoMessage = "Fin de l'attribution de joueur : Vos joueurs vous ont été attribués, vous pouvez aller ouvrir votre pack dans la page pack.";
+
+                    // Cache le message seulement si l'attribution a réussi
+                    setTimeout(() => {
+                        showInfoMessage = false;
+                        localStorage.setItem('hasSeenInfoMessage', 'true');
+                    }, 10000); // Cache après 10 secondes
                 } else {
-                    console.error("Unexpected response message:", result.message); // Log l'erreur si besoin
+                    console.error("Unexpected response message:", result.message);
                     infoMessage = "Erreur : L'attribution des joueurs a échoué. Veuillez réessayer.";
                 }
             } catch (error) {
@@ -97,10 +103,6 @@
             try {
                 players = await loadPlayers(userId);
                 console.log("Loaded Players :", players);
-                setTimeout(() => {
-                    showInfoMessage = false;
-                    localStorage.setItem('hasSeenInfoMessage', 'true'); // Stocke que le message a été vu
-                }, 10000); // Cache le message après 10 secondes
             } catch (error) {
                 console.error("Error loading players:", error);
                 players = [];  // Initialise à un tableau vide en cas d'erreur
