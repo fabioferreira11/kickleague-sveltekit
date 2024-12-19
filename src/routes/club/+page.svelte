@@ -16,6 +16,10 @@
     let isAscending = true;
     let buttonText = 'ASC';
 
+    // Gestion des messages d'information
+    let showInfoMessage = true;  // Affiche le message au début
+    let infoMessage = 'Information importante : Vos premiers joueurs sont en train de vous être attribués, veuillez rester sur la page club en attendant la fin de l\'attribution.';
+
     // Fonction pour vérifier la taille de l'écran
     function checkScreenSize() {
         if (typeof window !== 'undefined') {
@@ -63,20 +67,26 @@
 
             if (!backgroundResponse.ok) {
                 console.error(`Background function failed with status ${backgroundResponse.status}`);
+                infoMessage = "Erreur : L'attribution des joueurs a échoué. Veuillez réessayer.";
                 return; // Stop ici pour éviter un appel .json() sur une réponse non valide
             }
 
             try {
                 const result = await backgroundResponse.json();
                 console.log("Parsed JSON response:", result);
+
+                // Mise à jour du message lorsque le processus est terminé
+                infoMessage = "Fin de l'attribution de joueur : Vos joueurs vous ont été attribués, vous pouvez aller ouvrir votre pack dans la page pack.";
             } catch (error) {
                 console.error("Failed to parse JSON:", error);
+                infoMessage = "Erreur : L'attribution des joueurs a échoué. Veuillez réessayer.";
             }
 
             // Actualise les joueurs attribués après la fonction d'arrière-plan
             try {
                 players = await loadPlayers(userId);
                 console.log("Loaded Players :", players);
+                setTimeout(() => showInfoMessage = false, 10000); // Cache le message après 10 secondes
             } catch (error) {
                 console.error("Error loading players:", error);
                 players = [];  // Initialise à un tableau vide en cas d'erreur
@@ -194,6 +204,12 @@
 {:else}
     <Header style="margin-top: 2vh;"/>
 {/if}
+
+{#if showInfoMessage}
+    <div class="info-message">
+        <p>{infoMessage}</p>
+    </div>
+{/if}
 <section class="club-text">
     <h2>Club</h2>
     <p>Bienvenue dans votre club, où toutes vos cartes sont à portée de main. Filtrer facilement vos cartes par équipe, rareté ou anciénneté pour visualiser les différentes cartes que vous possédez.</p>
@@ -220,6 +236,27 @@
     .club-text h2, .club-text p {
         text-align: center;
         margin:2vh auto;
+    }
+
+    .info-message {
+        position: fixed;
+        top: 2vh;
+        right: 2vw;
+        background-color: rgba(0, 128, 0, 0.9);
+        color: white;
+        padding: 1vh 2vw;
+        border-radius: 10px;
+        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+        z-index: 100;
+        font-size: var(--textmobil);
+        text-align: center;
+        max-width: 300px;
+        animation: fadeIn 0.5s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
     }
 
     #filters{
