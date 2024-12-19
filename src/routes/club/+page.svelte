@@ -84,7 +84,7 @@
             try {
                 players = await loadPlayers(userId);
                 console.log("Loaded Players :", players);
-                setTimeout(() => showInfoMessage = false, 10000); // Cache le message après 10 secondes
+                setTimeout(() => showInfoMessage = false, 10000); // Cache le message après 10 secondes 
             } catch (error) {
                 console.error("Error loading players:", error);
                 players = [];  // Initialise à un tableau vide en cas d'erreur
