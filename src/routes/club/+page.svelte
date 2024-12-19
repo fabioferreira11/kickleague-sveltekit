@@ -57,29 +57,38 @@
             userId = sessionData.userid;
 
             // Déclenche la fonction d'arrière-plan pour l'attribution
-            const backgroundResponse = await fetch('/.netlify/functions/assign-welcome-pack-background', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId })
-            });
-
-            console.log("Raw background response:", backgroundResponse);
-
-            if (!backgroundResponse.ok) {
-                console.error(`Background function failed with status ${backgroundResponse.status}`);
-                infoMessage = "Erreur : L'attribution des joueurs a échoué. Veuillez réessayer.";
-                return; // Stop ici pour éviter un appel .json() sur une réponse non valide
-            }
-
             try {
-                const result = await backgroundResponse.json();
-                console.log("Parsed JSON response:", result);
+                const backgroundResponse = await fetch('/.netlify/functions/assign-welcome-pack-background', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId })
+                });
 
-                // Mise à jour du message lorsque le processus est terminé
-                infoMessage = "Fin de l'attribution de joueur : Vos joueurs vous ont été attribués, vous pouvez aller ouvrir votre pack dans la page pack.";
+                if (!backgroundResponse.ok) {
+                    console.error(`Background function failed with status ${backgroundResponse.status}`);
+                    infoMessage = "Erreur : L'attribution des joueurs a échoué. Veuillez réessayer.";
+                    return;
+                }
+
+                const text = await backgroundResponse.text(); // Récupère le texte brut
+                if (!text) {
+                    console.error("Empty response body");
+                    infoMessage = "Erreur : Réponse vide du serveur. Veuillez réessayer.";
+                    return;
+                }
+
+                const result = JSON.parse(text); // Convertit le texte en JSON
+                console.log("Background function result:", result);
+
+                if (result.message?.toLowerCase().includes("success")) {
+                    infoMessage = "Fin de l'attribution de joueur : Vos joueurs vous ont été attribués, vous pouvez aller ouvrir votre pack dans la page pack.";
+                } else {
+                    console.error("Unexpected response message:", result.message);
+                    infoMessage = "Erreur : L'attribution des joueurs a échoué. Veuillez réessayer.";
+                }
             } catch (error) {
-                console.error("Failed to parse JSON:", error);
-                infoMessage = "Erreur : L'attribution des joueurs a échoué. Veuillez réessayer.";
+                console.error("Erreur pendant l'attribution :", error);
+                infoMessage = "Erreur : Une erreur réseau est survenue. Veuillez réessayer.";
             }
 
             // Actualise les joueurs attribués après la fonction d'arrière-plan
