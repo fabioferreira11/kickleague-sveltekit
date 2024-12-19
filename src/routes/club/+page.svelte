@@ -79,12 +79,13 @@
 
             try {
                 const result = await backgroundResponse.json();
-                console.log("Parsed JSON response:", result);
+                console.log("Parsed JSON response:", result); // Log pour vérifier ce qui est renvoyé par l'API
 
-                // Vérifie si le processus a réussi
-                if (backgroundResponse.ok && result.message === "Players successfully assigned.") {
+                // Vérifie si le message d'API contient un succès
+                if (backgroundResponse.ok && result.message?.toLowerCase().includes("success")) {
                     infoMessage = "Fin de l'attribution de joueur : Vos joueurs vous ont été attribués, vous pouvez aller ouvrir votre pack dans la page pack.";
                 } else {
+                    console.error("Unexpected response message:", result.message); // Log l'erreur si besoin
                     infoMessage = "Erreur : L'attribution des joueurs a échoué. Veuillez réessayer.";
                 }
             } catch (error) {
