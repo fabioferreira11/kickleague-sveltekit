@@ -17,8 +17,8 @@
     let buttonText = 'ASC';
 
     // Gestion des messages d'information
-    let showInfoMessage = true;  // Affiche le message au début
-    let infoMessage = 'Information importante : Vos premiers joueurs sont en train de vous être attribués, veuillez rester sur la page club en attendant la fin de l\'attribution.';
+    let showInfoMessage = false;  // Affiche le message au début
+    let infoMessage = '';  // Contenu du message
 
     // Fonction pour vérifier la taille de l'écran
     function checkScreenSize() {
@@ -46,6 +46,13 @@
 
     // Code exécuté au montage du composant
     onMount(async () => {
+        // Vérifie si l'utilisateur a déjà vu le message
+        const hasSeenMessage = localStorage.getItem('hasSeenInfoMessage');
+        if (!hasSeenMessage) {
+            showInfoMessage = true;
+            infoMessage = "Information importante : Vos premiers joueurs sont en train de vous être attribués, veuillez rester sur la page club en attendant la fin de l'attribution.";
+        }
+
         const sessionResponse = await fetch('/api/session', {
             method: 'GET',
             credentials: 'include'
@@ -67,7 +74,6 @@
 
             if (!backgroundResponse.ok) {
                 console.error(`Background function failed with status ${backgroundResponse.status}`);
-                infoMessage = "Erreur : L'attribution des joueurs a échoué. Veuillez réessayer.";
                 return; // Stop ici pour éviter un appel .json() sur une réponse non valide
             }
 
@@ -75,8 +81,12 @@
                 const result = await backgroundResponse.json();
                 console.log("Parsed JSON response:", result);
 
-                // Mise à jour du message lorsque le processus est terminé
-                infoMessage = "Fin de l'attribution de joueur : Vos joueurs vous ont été attribués, vous pouvez aller ouvrir votre pack dans la page pack.";
+                // Vérifie si le processus a réussi
+                if (backgroundResponse.ok && result.message === "Players successfully assigned.") {
+                    infoMessage = "Fin de l'attribution de joueur : Vos joueurs vous ont été attribués, vous pouvez aller ouvrir votre pack dans la page pack.";
+                } else {
+                    infoMessage = "Erreur : L'attribution des joueurs a échoué. Veuillez réessayer.";
+                }
             } catch (error) {
                 console.error("Failed to parse JSON:", error);
                 infoMessage = "Erreur : L'attribution des joueurs a échoué. Veuillez réessayer.";
@@ -86,7 +96,10 @@
             try {
                 players = await loadPlayers(userId);
                 console.log("Loaded Players :", players);
-                setTimeout(() => showInfoMessage = false, 10000); // Cache le message après 10 secondes
+                setTimeout(() => {
+                    showInfoMessage = false;
+                    localStorage.setItem('hasSeenInfoMessage', 'true'); // Stocke que le message a été vu
+                }, 10000); // Cache le message après 10 secondes
             } catch (error) {
                 console.error("Error loading players:", error);
                 players = [];  // Initialise à un tableau vide en cas d'erreur
