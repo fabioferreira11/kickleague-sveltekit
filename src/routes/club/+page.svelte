@@ -17,7 +17,7 @@
     let buttonText = 'ASC';
 
     // Gestion des messages d'information
-    let showInfoMessage = true;  // Affiche le message au début
+    let showInfoMessage = false;  // Affiche le message au début
     let infoMessage = 'Information importante : Vos premiers joueurs sont en train de vous être attribués, veuillez rester sur la page club en attendant la fin de l\'attribution.';
     let loading = true;  // Variable pour gérer la temporisation
 
@@ -50,8 +50,9 @@
         checkScreenSize();
 
         // Vérifie si c'est la première visite
-        if (!localStorage.getItem('clubPageVisited')) {
-            showInfoMessage = true;
+        const isFirstVisit = !localStorage.getItem('clubPageVisited');
+        if (isFirstVisit) {
+            showInfoMessage = true; // Affiche le message uniquement la première fois
 
             // Temporisation de 25 secondes pour changer le message
             setTimeout(() => {
