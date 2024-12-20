@@ -12,30 +12,17 @@ const season = 2024;
 export const handler = async (event) => {
     try {
         if (!event.body) throw new Error("Request body is missing.");
-        const { userId, checkStatus } = JSON.parse(event.body);
+        const { userId } = JSON.parse(event.body);
         if (!userId) throw new Error("User ID is missing in the request body.");
 
         console.log(`Starting background process for user ID: ${userId}`);
-
-        // Vérification de l'état d'avancement si `checkStatus` est true
-        if (checkStatus) {
-            const existingPlayers = await mysqlDatabase.query('SELECT 1 FROM user_players WHERE user_id = ?', [userId]);
-            if (existingPlayers.length > 0) {
-                return { statusCode: 204 }; // 204: No Content - joueurs déjà assignés
-            } else {
-                return { statusCode: 202 }; // 202: Accepted - en cours d'attribution
-            }
-        }
 
         // Vérification des joueurs déjà assignés
         const existingPlayers = await mysqlDatabase.query('SELECT 1 FROM user_players WHERE user_id = ?', [userId]);
         if (existingPlayers.length > 0) {
             console.log(`Players already assigned to user ${userId}`);
-            return { statusCode: 204 }; // 204: No Content
+            return { statusCode: 200, body: JSON.stringify({ message: 'Players already assigned.' }) };
         }
-
-        // Envoyer une réponse intermédiaire au client
-        console.log("Processus d'attribution en cours...");
 
         // Récupération des informations utilisateur
         const [userDetails] = await mysqlDatabase.query('SELECT club, pays FROM users WHERE id = ?', [userId]);
@@ -109,10 +96,13 @@ export const handler = async (event) => {
         }
 
         console.log(`Players successfully assigned for user ${userId}`);
-        return { statusCode: 200 }; // 200: OK - succès
+        return {
+            statusCode: 200,
+            body: JSON.stringify({ message: 'Players successfully assigned.', players: finalPlayers }),
+        };
 
     } catch (error) {
         console.error('Error in background function:', error);
-        return { statusCode: 500, body: "Erreur serveur" }; // 500: Internal Server Error
+        return { statusCode: 500, body: JSON.stringify({ error: error.message }) };
     }
 };

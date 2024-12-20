@@ -32,10 +32,10 @@
         const filterButton = document.getElementById('filter-team');
         const optionsContainer = document.querySelector('[data-filter-group="team"]');
         if (optionsContainer.offsetWidth > filterButton.offsetWidth) {
-            filterButton.style.width = `${optionsContainer.offsetWidth}px`;
+            filterButton.style.width = ${optionsContainer.offsetWidth}px;
         }
     }
-    
+
     // Fonction pour afficher les attributs de données pour chaque carte de joueur (pour débogage)
     function checkDataTeamAttributes() {
         const cards = document.querySelectorAll('.carte-joueur');
@@ -43,34 +43,6 @@
             console.log(card.dataset.team);
         });
     }
-
-     // Fonction pour vérifier l'état d'avancement
-     const checkStatus = async () => {
-        try {
-            const response = await fetch('/.netlify/functions/assign-welcome-pack-background', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId, checkStatus: true })
-            });
-
-            if (response.status === 204) { 
-                // Code 204: Joueurs déjà assignés
-                infoMessage = "Fin de l'attribution : Vos joueurs vous ont été attribués. Vous pouvez ouvrir votre pack.";
-                players = await loadPlayers(userId);  
-                showInfoMessage = false;  
-            } else if (response.status === 202) { 
-                // Code 202: En cours d'attribution
-                infoMessage = "Information importante : Vos joueurs sont en cours d'attribution.";
-                setTimeout(checkStatus, 3000);  
-            } else {
-                console.error("Unexpected response status:", response.status);
-                infoMessage = "Une erreur est survenue. Veuillez réessayer.";
-            }
-        } catch (error) {
-            console.error("Error checking status:", error);
-            infoMessage = "Erreur réseau ou serveur. Veuillez réessayer.";
-        }
-    };
 
     // Code exécuté au montage du composant
     onMount(async () => {
@@ -81,17 +53,34 @@
         const sessionData = await sessionResponse.json();
         console.log("Session Data:", sessionData);
 
-        if (sessionResponse.ok && sessionData.userid) {
+        if (sessionResponse.ok) {
             userId = sessionData.userid;
 
-             // Démarre le processus d'attribution
-             await fetch('/.netlify/functions/assign-welcome-pack-background', {
+            // Déclenche la fonction d'arrière-plan pour l'attribution
+            const backgroundResponse = await fetch('/.netlify/functions/assign-welcome-pack-background', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userId })
             });
 
-                checkStatus(); // Appel initial pour vérifier le statut
+            console.log("Raw background response:", backgroundResponse);
+
+            if (!backgroundResponse.ok) {
+                console.error(Background function failed with status ${backgroundResponse.status});
+                infoMessage = "Erreur : L'attribution des joueurs a échoué. Veuillez réessayer.";
+                return; // Stop ici pour éviter un appel .json() sur une réponse non valide
+            }
+
+            try {
+                const result = await backgroundResponse.json();
+                console.log("Parsed JSON response:", result);
+
+                // Mise à jour du message lorsque le processus est terminé
+                infoMessage = "Fin de l'attribution de joueur : Vos joueurs vous ont été attribués, vous pouvez aller ouvrir votre pack dans la page pack.";
+            } catch (error) {
+                console.error("Failed to parse JSON:", error);
+                infoMessage = "Erreur : L'attribution des joueurs a échoué. Veuillez réessayer.";
+            }
 
             // Actualise les joueurs attribués après la fonction d'arrière-plan
             try {
