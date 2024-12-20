@@ -18,7 +18,7 @@
 
     // Gestion des messages d'information
     let showInfoMessage = true;  // Affiche le message au début
-    let infoMessage = 'Information importante : Vos premiers joueurs sont en train de vous être attribués, veuillez rester sur la page club en attendant la fin de l\'attribution.';
+    let infoMessage = '';
 
     // Fonction pour vérifier la taille de l'écran
     function checkScreenSize() {
