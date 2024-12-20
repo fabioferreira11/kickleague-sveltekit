@@ -19,6 +19,7 @@
     // Gestion des messages d'information
     let showInfoMessage = true;  // Affiche le message au début
     let infoMessage = 'Information importante : Vos premiers joueurs sont en train de vous être attribués, veuillez rester sur la page club en attendant la fin de l\'attribution.';
+    let loading = true;  // Variable pour gérer la temporisation
 
     // Fonction pour vérifier la taille de l'écran
     function checkScreenSize() {
@@ -46,6 +47,15 @@
 
     // Code exécuté au montage du composant
     onMount(async () => {
+        // Vérification de la taille de l'écran
+        checkScreenSize();
+
+        // Déclenchement de la temporisation de 25 secondes
+        setTimeout(() => {
+            infoMessage = "Vos joueurs ont été attribués ! Vous pouvez maintenant ouvrir votre pack dans la page dédiée.";
+            loading = false;  // Arrêt du chargement
+        }, 25000);  // 25 secondes
+
         const sessionResponse = await fetch('/api/session', {
             method: 'GET',
             credentials: 'include'
@@ -86,7 +96,6 @@
             try {
                 players = await loadPlayers(userId);
                 console.log("Loaded Players :", players);
-                setTimeout(() => showInfoMessage = false, 10000); // Cache le message après 10 secondes
             } catch (error) {
                 console.error("Error loading players:", error);
                 players = [];  // Initialise à un tableau vide en cas d'erreur
