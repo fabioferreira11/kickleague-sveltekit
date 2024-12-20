@@ -53,14 +53,8 @@
         const sessionData = await sessionResponse.json();
         console.log("Session Data:", sessionData);
 
-        if (sessionResponse.ok && sessionData.userid) {
+        if (sessionResponse.ok) {
             userId = sessionData.userid;
-
-            // Vérification supplémentaire avant d'envoyer la requête
-            if (!userId) {
-                console.error("User ID is missing, cannot proceed with background task.");
-                return;
-            }
 
             // Déclenche la fonction d'arrière-plan pour l'attribution
             const backgroundResponse = await fetch('/.netlify/functions/assign-welcome-pack-background', {
@@ -77,20 +71,22 @@
                 return; // Stop ici pour éviter un appel .json() sur une réponse non valide
             }
 
-            const result = await backgroundResponse.json();
-            if (result.status === 'in_progress') {
-                infoMessage = "Vos joueurs sont en cours d'attribution. Veuillez patienter...";
-            } else if (result.status === 'completed') {
-                infoMessage = "Fin de l'attribution : Vos joueurs vous ont été attribués. Vous pouvez aller ouvrir votre pack.";
-            } else {
-                infoMessage = "Une erreur est survenue. Veuillez réessayer.";
+            try {
+                const result = await backgroundResponse.json();
+                console.log("Parsed JSON response:", result);
+
+                // Mise à jour du message lorsque le processus est terminé
+                infoMessage = "Fin de l'attribution de joueur : Vos joueurs vous ont été attribués, vous pouvez aller ouvrir votre pack dans la page pack.";
+            } catch (error) {
+                console.error("Failed to parse JSON:", error);
+                infoMessage = "Erreur : L'attribution des joueurs a échoué. Veuillez réessayer.";
             }
 
             // Actualise les joueurs attribués après la fonction d'arrière-plan
             try {
                 players = await loadPlayers(userId);
                 console.log("Loaded Players :", players);
-                setTimeout(() => showInfoMessage = false, 10000); // Cache le message après 10 secondes 
+                setTimeout(() => showInfoMessage = false, 10000); // Cache le message après 10 secondes
             } catch (error) {
                 console.error("Error loading players:", error);
                 players = [];  // Initialise à un tableau vide en cas d'erreur
