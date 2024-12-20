@@ -53,30 +53,17 @@
                 body: JSON.stringify({ userId, checkStatus: true })
             });
 
-            if (!response.ok) {
-                console.error(`HTTP Error: ${response.status}`);
-                infoMessage = "Une erreur est survenue. Veuillez réessayer.";
-                return;
-            }
-
-            const textResponse = await response.text(); // Lire la réponse comme texte
-            if (!textResponse) {
-                console.error("Empty response from server");
-                infoMessage = "Une erreur inattendue est survenue.";
-                return;
-            }
-
-            const result = JSON.parse(textResponse); // Convertir en JSON seulement si non vide
-            console.log("Status Check Response:", result);
-
-            if (result.status === 'in_progress') {
-                infoMessage = "Information importante : Vos joueurs sont en cours d'attribution.";
-                setTimeout(checkStatus, 3000);  
-            } else if (result.status === 'completed') {
+            if (response.status === 204) { 
+                // Code 204: Joueurs déjà assignés
                 infoMessage = "Fin de l'attribution : Vos joueurs vous ont été attribués. Vous pouvez ouvrir votre pack.";
                 players = await loadPlayers(userId);  
                 showInfoMessage = false;  
+            } else if (response.status === 202) { 
+                // Code 202: En cours d'attribution
+                infoMessage = "Information importante : Vos joueurs sont en cours d'attribution.";
+                setTimeout(checkStatus, 3000);  
             } else {
+                console.error("Unexpected response status:", response.status);
                 infoMessage = "Une erreur est survenue. Veuillez réessayer.";
             }
         } catch (error) {

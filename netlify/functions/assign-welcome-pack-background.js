@@ -21,9 +21,9 @@ export const handler = async (event) => {
         if (checkStatus) {
             const existingPlayers = await mysqlDatabase.query('SELECT 1 FROM user_players WHERE user_id = ?', [userId]);
             if (existingPlayers.length > 0) {
-                return { statusCode: 200, body: JSON.stringify({ status: 'completed', message: 'Players already assigned.' }) };
+                return { statusCode: 204 }; // 204: No Content - joueurs déjà assignés
             } else {
-                return { statusCode: 200, body: JSON.stringify({ status: 'in_progress', message: 'Players are being assigned.' }) };
+                return { statusCode: 202 }; // 202: Accepted - en cours d'attribution
             }
         }
 
@@ -31,7 +31,7 @@ export const handler = async (event) => {
         const existingPlayers = await mysqlDatabase.query('SELECT 1 FROM user_players WHERE user_id = ?', [userId]);
         if (existingPlayers.length > 0) {
             console.log(`Players already assigned to user ${userId}`);
-            return { statusCode: 200, body: JSON.stringify({ status: 'completed', message: 'Players already assigned.' }) };
+            return { statusCode: 204 }; // 204: No Content
         }
 
         // Envoyer une réponse intermédiaire au client
@@ -109,13 +109,10 @@ export const handler = async (event) => {
         }
 
         console.log(`Players successfully assigned for user ${userId}`);
-        return {
-            statusCode: 200,
-            body: JSON.stringify({ status: 'completed', message: 'Players successfully assigned.', players: finalPlayers }),
-        };
+        return { statusCode: 200 }; // 200: OK - succès
 
     } catch (error) {
         console.error('Error in background function:', error);
-        return { statusCode: 500, body: JSON.stringify({ status: 'error', message: error.message || "Unexpected server error" }) };
+        return { statusCode: 500, body: "Erreur serveur" }; // 500: Internal Server Error
     }
 };
