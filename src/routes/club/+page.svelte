@@ -32,10 +32,10 @@
         const filterButton = document.getElementById('filter-team');
         const optionsContainer = document.querySelector('[data-filter-group="team"]');
         if (optionsContainer.offsetWidth > filterButton.offsetWidth) {
-            filterButton.style.width = ${optionsContainer.offsetWidth}px;
+            filterButton.style.width = `${optionsContainer.offsetWidth}px`;
         }
     }
-
+    
     // Fonction pour afficher les attributs de données pour chaque carte de joueur (pour débogage)
     function checkDataTeamAttributes() {
         const cards = document.querySelectorAll('.carte-joueur');
@@ -66,7 +66,7 @@
             console.log("Raw background response:", backgroundResponse);
 
             if (!backgroundResponse.ok) {
-                console.error(Background function failed with status ${backgroundResponse.status});
+                console.error(`Background function failed with status ${backgroundResponse.status}`);
                 infoMessage = "Erreur : L'attribution des joueurs a échoué. Veuillez réessayer.";
                 return; // Stop ici pour éviter un appel .json() sur une réponse non valide
             }
