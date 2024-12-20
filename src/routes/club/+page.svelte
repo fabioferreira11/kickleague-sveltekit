@@ -49,21 +49,6 @@
     onMount(async () => {
         checkScreenSize();
 
-        // Vérifie si c'est la première visite
-        const isFirstVisit = !localStorage.getItem('clubPageVisited');
-        if (isFirstVisit) {
-            showInfoMessage = true; // Affiche le message uniquement la première fois
-
-            // Temporisation de 25 secondes pour changer le message
-            setTimeout(() => {
-                infoMessage = "Vos joueurs ont été attribués ! Vous pouvez maintenant ouvrir votre pack dans la page dédiée.";
-                loading = false;
-            }, 25000);
-
-            // Enregistre que l'utilisateur a visité la page
-            localStorage.setItem('clubPageVisited', 'true');
-        }
-
         const sessionResponse = await fetch('/api/session', {
             method: 'GET',
             credentials: 'include'
@@ -73,6 +58,23 @@
 
         if (sessionResponse.ok) {
             userId = sessionData.userid;
+
+            // Vérifie si c'est la première visite pour CE compte utilisateur
+            const visitKey = `clubPageVisited_${userId}`;
+            const isFirstVisit = !localStorage.getItem(visitKey);
+
+            if (isFirstVisit) {
+                showInfoMessage = true; // Affiche le message
+
+                // Temporisation de 25 secondes pour changer le message
+                setTimeout(() => {
+                    infoMessage = "Vos joueurs ont été attribués ! Vous pouvez maintenant ouvrir votre pack dans la page dédiée.";
+                    loading = false;
+                }, 25000);
+
+                // Marque la page comme visitée pour ce compte utilisateur
+                localStorage.setItem(visitKey, 'true');
+            }
 
             // Déclenche la fonction d'arrière-plan pour l'attribution
             const backgroundResponse = await fetch('/.netlify/functions/assign-welcome-pack-background', {
