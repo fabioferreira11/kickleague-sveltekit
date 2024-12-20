@@ -11,9 +11,33 @@ const season = 2024;
 
 export const handler = async (event) => {
     try {
-        if (!event.body) throw new Error("Request body is missing.");
-        const { userId } = JSON.parse(event.body);
-        if (!userId) throw new Error("User ID is missing in the request body.");
+        // Vérification que le body existe et est valide
+        if (!event.body) {
+            console.error("Request body is missing.");
+            return {
+                statusCode: 400,
+                body: JSON.stringify({ status: 'error', message: "Request body is missing." })
+            };
+        }
+
+        let parsedBody;
+        try {
+            parsedBody = JSON.parse(event.body); // Essaye de parser le corps JSON
+        } catch (err) {
+            console.error("Failed to parse JSON body:", err);
+            return {
+                statusCode: 400,
+                body: JSON.stringify({ status: 'error', message: "Invalid JSON body." })
+            };
+        }
+
+        const { userId } = parsedBody;
+        if (!userId) {
+            return {
+                statusCode: 400,
+                body: JSON.stringify({ status: 'error', message: "User ID is missing in the request body." })
+            };
+        }
 
         console.log(`Starting background process for user ID: ${userId}`);
 
@@ -21,8 +45,12 @@ export const handler = async (event) => {
         const existingPlayers = await mysqlDatabase.query('SELECT 1 FROM user_players WHERE user_id = ?', [userId]);
         if (existingPlayers.length > 0) {
             console.log(`Players already assigned to user ${userId}`);
-            return { statusCode: 200, body: JSON.stringify({ message: 'Players already assigned.' }) };
-        }
+            return { statusCode: 200, body: JSON.stringify({ status: 'completed', message: 'Players already assigned.' }) };
+        }        
+
+         // Retourne un statut intermédiaire pour informer du début du processus
+         console.log("Processus d'attribution en cours...");
+         return { statusCode: 200, body: JSON.stringify({ status: 'in_progress', message: 'Assigning players. Please wait.' }) }; 
 
         // Récupération des informations utilisateur
         const [userDetails] = await mysqlDatabase.query('SELECT club, pays FROM users WHERE id = ?', [userId]);
@@ -98,7 +126,7 @@ export const handler = async (event) => {
         console.log(`Players successfully assigned for user ${userId}`);
         return {
             statusCode: 200,
-            body: JSON.stringify({ message: 'Players successfully assigned.', players: finalPlayers }),
+            body: JSON.stringify({ status: 'completed', message: 'Players successfully assigned.', players: finalPlayers }),
         };
 
     } catch (error) {
