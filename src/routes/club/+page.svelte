@@ -89,8 +89,6 @@
                 };
 
                 checkStatus(); // Appel initial pour vérifier le statut
-            }
-        });
 
             // Actualise les joueurs attribués après la fonction d'arrière-plan
             try {
