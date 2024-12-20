@@ -21,8 +21,15 @@ export const handler = async (event) => {
         const existingPlayers = await mysqlDatabase.query('SELECT 1 FROM user_players WHERE user_id = ?', [userId]);
         if (existingPlayers.length > 0) {
             console.log(`Players already assigned to user ${userId}`);
-            return { statusCode: 200, body: JSON.stringify({ message: 'Players already assigned.' }) };
+            return { statusCode: 200, body: JSON.stringify({ status: 'completed', message: 'Players already assigned.' }) };
         }
+
+        // Envoyer une réponse intermédiaire au client
+        console.log("Processus d'attribution en cours...");
+        return {
+            statusCode: 200,
+            body: JSON.stringify({ status: 'in_progress', message: 'Assigning players. Please wait.' })
+        };
 
         // Récupération des informations utilisateur
         const [userDetails] = await mysqlDatabase.query('SELECT club, pays FROM users WHERE id = ?', [userId]);
@@ -96,10 +103,10 @@ export const handler = async (event) => {
         }
 
         console.log(`Players successfully assigned for user ${userId}`);
-        return {
-            statusCode: 200,
-            body: JSON.stringify({ message: 'Players successfully assigned.', players: finalPlayers }),
-        };
+        // return {
+        //     statusCode: 200,
+        //     body: JSON.stringify({ message: 'Players successfully assigned.', players: finalPlayers }),
+        // };
 
     } catch (error) {
         console.error('Error in background function:', error);
