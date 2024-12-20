@@ -22,7 +22,7 @@ export const handler = async (event) => {
 
         let parsedBody;
         try {
-            parsedBody = JSON.parse(event.body); // Essaye de parser le corps JSON
+            parsedBody = JSON.parse(event.body);
         } catch (err) {
             console.error("Failed to parse JSON body:", err);
             return {
@@ -45,11 +45,20 @@ export const handler = async (event) => {
         const existingPlayers = await mysqlDatabase.query('SELECT 1 FROM user_players WHERE user_id = ?', [userId]);
         if (existingPlayers.length > 0) {
             console.log(`Players already assigned to user ${userId}`);
-            return { statusCode: 200, body: JSON.stringify({ status: 'completed', message: 'Players already assigned.' }) };
-        }        
+            return {
+                statusCode: 200,
+                body: JSON.stringify({ status: 'completed', message: 'Players already assigned.' })
+            };
+        }
 
-         // Retourne un statut intermédiaire pour informer du début du processus
-         console.log("Processus d'attribution en cours...");
+        // Retourne un statut intermédiaire pour informer du début du processus
+        console.log("Processus d'attribution en cours...");
+        return {
+            statusCode: 200,
+            body: JSON.stringify({ status: 'in_progress', message: 'Assigning players. Please wait.' })
+        };
+
+        // **Le reste du code ne sera exécuté qu'une seule fois pour chaque utilisateur**
 
         // Récupération des informations utilisateur
         const [userDetails] = await mysqlDatabase.query('SELECT club, pays FROM users WHERE id = ?', [userId]);
