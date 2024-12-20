@@ -12,10 +12,20 @@ const season = 2024;
 export const handler = async (event) => {
     try {
         if (!event.body) throw new Error("Request body is missing.");
-        const { userId } = JSON.parse(event.body);
+        const { userId, checkStatus } = JSON.parse(event.body);
         if (!userId) throw new Error("User ID is missing in the request body.");
 
         console.log(`Starting background process for user ID: ${userId}`);
+
+        // Vérification de l'état d'avancement si `checkStatus` est true
+        if (checkStatus) {
+            const existingPlayers = await mysqlDatabase.query('SELECT 1 FROM user_players WHERE user_id = ?', [userId]);
+            if (existingPlayers.length > 0) {
+                return { statusCode: 200, body: JSON.stringify({ status: 'completed', message: 'Players already assigned.' }) };
+            } else {
+                return { statusCode: 200, body: JSON.stringify({ status: 'in_progress', message: 'Players are being assigned.' }) };
+            }
+        }
 
         // Vérification des joueurs déjà assignés
         const existingPlayers = await mysqlDatabase.query('SELECT 1 FROM user_players WHERE user_id = ?', [userId]);

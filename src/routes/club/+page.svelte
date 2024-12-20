@@ -18,7 +18,7 @@
 
     // Gestion des messages d'information
     let showInfoMessage = true;  // Affiche le message au début
-    let infoMessage = '';
+    let infoMessage = 'Information importante : Vos premiers joueurs sont en train de vous être attribués, veuillez rester sur la page club en attendant la fin de l\'attribution.';
 
     // Fonction pour vérifier la taille de l'écran
     function checkScreenSize() {
@@ -44,6 +44,29 @@
         });
     }
 
+     // Fonction pour vérifier l'état d'avancement
+     const checkStatus = async () => {
+        const response = await fetch('/.netlify/functions/assign-welcome-pack-background', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId, checkStatus: true })  
+        });
+
+        const result = await response.json();
+        console.log("Status Check Response:", result);
+
+        if (result.status === 'in_progress') {
+            infoMessage = "Information importante : Vos joueurs sont en cours d'attribution.";
+            setTimeout(checkStatus, 3000);  
+        } else if (result.status === 'completed') {
+            infoMessage = "Fin de l'attribution : Vos joueurs vous ont été attribués. Vous pouvez ouvrir votre pack.";
+            players = await loadPlayers(userId);  
+            showInfoMessage = false;  
+        } else {
+            infoMessage = "Une erreur est survenue. Veuillez réessayer.";
+        }
+    };
+
     // Code exécuté au montage du composant
     onMount(async () => {
         const sessionResponse = await fetch('/api/session', {
@@ -56,37 +79,12 @@
         if (sessionResponse.ok && sessionData.userid) {
             userId = sessionData.userid;
 
-            // Déclenche la fonction d'arrière-plan pour l'attribution
-        const checkStatus = async () => {
-            const backgroundResponse = await fetch('/.netlify/functions/assign-welcome-pack-background', {
+             // Démarre le processus d'attribution
+             await fetch('/.netlify/functions/assign-welcome-pack-background', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userId })
             });
-
-            console.log("Raw background response:", backgroundResponse);
-
-            // if (!backgroundResponse.ok) {
-            //     console.error(`Background function failed with status ${backgroundResponse.status}`);
-            //     infoMessage = "Erreur : L'attribution des joueurs a échoué. Veuillez réessayer.";
-            //     return; // Stop ici pour éviter un appel .json() sur une réponse non valide
-            // }
-
-            
-                const result = await backgroundResponse.json();
-                console.log("Parsed JSON response:", result);
-
-                        if (result.status === 'in_progress') {
-                        infoMessage = "Information importante : Vos premiers joueurs sont en train de vous être attribués, veuillez rester sur la page club en attendant la fin de l'attribution.";
-                        setTimeout(checkStatus, 3000); // Vérifie à nouveau après 3 secondes
-                    } else if (result.status === 'completed') {
-                        infoMessage = "Fin de l'attribution : Vos joueurs vous ont été attribués. Vous pouvez aller ouvrir votre pack.";
-                        players = await loadPlayers(userId);
-                        showInfoMessage = false;
-                    } else {
-                        infoMessage = "Une erreur est survenue. Veuillez réessayer.";
-                    }
-                };
 
                 checkStatus(); // Appel initial pour vérifier le statut
 
