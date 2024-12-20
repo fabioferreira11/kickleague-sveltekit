@@ -116,6 +116,6 @@ export const handler = async (event) => {
 
     } catch (error) {
         console.error('Error in background function:', error);
-        return { statusCode: 500, body: JSON.stringify({ error: error.message }) };
+        return { statusCode: 500, body: JSON.stringify({ status: 'error', message: error.message || "Unexpected server error" }) };
     }
 };

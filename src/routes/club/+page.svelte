@@ -46,24 +46,42 @@
 
      // Fonction pour vérifier l'état d'avancement
      const checkStatus = async () => {
-        const response = await fetch('/.netlify/functions/assign-welcome-pack-background', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId, checkStatus: true })  
-        });
+        try {
+            const response = await fetch('/.netlify/functions/assign-welcome-pack-background', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, checkStatus: true })
+            });
 
-        const result = await response.json();
-        console.log("Status Check Response:", result);
+            if (!response.ok) {
+                console.error(`HTTP Error: ${response.status}`);
+                infoMessage = "Une erreur est survenue. Veuillez réessayer.";
+                return;
+            }
 
-        if (result.status === 'in_progress') {
-            infoMessage = "Information importante : Vos joueurs sont en cours d'attribution.";
-            setTimeout(checkStatus, 3000);  
-        } else if (result.status === 'completed') {
-            infoMessage = "Fin de l'attribution : Vos joueurs vous ont été attribués. Vous pouvez ouvrir votre pack.";
-            players = await loadPlayers(userId);  
-            showInfoMessage = false;  
-        } else {
-            infoMessage = "Une erreur est survenue. Veuillez réessayer.";
+            const textResponse = await response.text(); // Lire la réponse comme texte
+            if (!textResponse) {
+                console.error("Empty response from server");
+                infoMessage = "Une erreur inattendue est survenue.";
+                return;
+            }
+
+            const result = JSON.parse(textResponse); // Convertir en JSON seulement si non vide
+            console.log("Status Check Response:", result);
+
+            if (result.status === 'in_progress') {
+                infoMessage = "Information importante : Vos joueurs sont en cours d'attribution.";
+                setTimeout(checkStatus, 3000);  
+            } else if (result.status === 'completed') {
+                infoMessage = "Fin de l'attribution : Vos joueurs vous ont été attribués. Vous pouvez ouvrir votre pack.";
+                players = await loadPlayers(userId);  
+                showInfoMessage = false;  
+            } else {
+                infoMessage = "Une erreur est survenue. Veuillez réessayer.";
+            }
+        } catch (error) {
+            console.error("Error checking status:", error);
+            infoMessage = "Erreur réseau ou serveur. Veuillez réessayer.";
         }
     };
 
