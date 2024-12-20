@@ -53,12 +53,6 @@ export const handler = async (event) => {
 
         // Retourne un statut intermédiaire pour informer du début du processus
         console.log("Processus d'attribution en cours...");
-        return {
-            statusCode: 200,
-            body: JSON.stringify({ status: 'in_progress', message: 'Assigning players. Please wait.' })
-        };
-
-        // **Le reste du code ne sera exécuté qu'une seule fois pour chaque utilisateur**
 
         // Récupération des informations utilisateur
         const [userDetails] = await mysqlDatabase.query('SELECT club, pays FROM users WHERE id = ?', [userId]);
