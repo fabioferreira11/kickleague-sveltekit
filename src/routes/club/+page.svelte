@@ -15,11 +15,13 @@
     let basActive = false;
     let isAscending = true;
     let buttonText = 'ASC';
+    let gsap; // Importation dynamique de GSAP
 
     // Gestion des messages d'information
     let showInfoMessage = false;  // Affiche le message au début
     let infoMessage = 'Information importante : Vos premiers joueurs sont en train de vous être attribués, veuillez rester sur la page club en attendant la fin de l\'attribution.';
     let loading = true;  // Variable pour gérer la temporisation
+    let infoMessageElement; // Référence à l'élément HTML
 
     // Fonction pour vérifier la taille de l'écran
     function checkScreenSize() {
@@ -49,6 +51,10 @@
     onMount(async () => {
         checkScreenSize();
 
+        // Charger GSAP dynamiquement
+        const { gsap: importedGsap } = await import("gsap");
+            gsap = importedGsap;
+
         const sessionResponse = await fetch('/api/session', {
             method: 'GET',
             credentials: 'include'
@@ -64,13 +70,36 @@
             const isFirstVisit = !localStorage.getItem(visitKey);
 
             if (isFirstVisit) {
-                showInfoMessage = true; // Affiche le message
-
-                // Temporisation de 25 secondes pour changer le message
+                 // Délai avant l'apparition
                 setTimeout(() => {
-                    infoMessage = "Vos joueurs ont été attribués ! Vous pouvez maintenant ouvrir votre pack dans la page dédiée.";
-                    loading = false;
-                }, 25000);
+                    showInfoMessage = true;
+
+                   // Lancer l'animation après la mise en place du DOM
+                   setTimeout(() => {
+                        gsap.fromTo(
+                            infoMessageElement, // Référence HTML
+                            { x: "100%", opacity: 0 }, // Hors de l'écran
+                            { x: "0%", opacity: 1, duration: 0.5 } // Vers l'écran
+                        );
+
+                        // Mise à jour du message après 25 secondes
+                        setTimeout(() => {
+                            infoMessage = "Vos joueurs ont été attribués ! Vous pouvez maintenant ouvrir votre pack.";
+
+                            // Animation de disparition après 10 secondes
+                            setTimeout(() => {
+                                gsap.to(infoMessageElement, {
+                                    x: "100%", // Retour hors de l'écran
+                                    opacity: 0,
+                                    duration: 0.5,
+                                    onComplete: () => {
+                                        showInfoMessage = false;
+                                    }
+                                });
+                            }, 10000);
+                        }, 25000);
+                    }, 50); // Délai pour attendre la mise à jour DOM
+                }, 1000); // Temporisation d'1 seconde
 
                 // Marque la page comme visitée pour ce compte utilisateur
                 localStorage.setItem(visitKey, 'true');
@@ -208,7 +237,7 @@
 {/if}
 
 {#if showInfoMessage}
-    <div class="info-message">
+    <div class="info-message" bind:this={infoMessageElement}>
         <p>{infoMessage}</p>
     </div>
 {/if}
@@ -242,17 +271,18 @@
 
     .info-message {
         position: fixed;
-        top: 7vh;
-        right: 2vw;
+        bottom: 0vh;
+        right: 0vw;
         background-color: var(--green);
-        padding: 1vh 2vw;
-        border-radius: 10px;
+        padding: 1vh 3vw;
+        border-radius: 10px 10px 0 0;
         box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
         z-index: 100;
         font-size: var(--textmobil);
         text-align: center;
-        max-width: 300px;
-        animation: fadeIn 0.5s ease-in-out;
+        max-width: 100%;
+        transform: translateX(100%); /* Initialement hors de l'écran */
+        opacity: 0; /* Invisible au départ */
     }
 
     .info-message p{
@@ -340,6 +370,12 @@
 
         .club-text h2{
             margin: 5vh 0 2vh 0 ;
+        }
+
+        .info-message {
+            padding: 1vh 2vw;
+            max-width: 20%;
+            border-radius: 10px 0 0 0;
         }
 
         .btn-filtre{
