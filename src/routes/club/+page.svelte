@@ -242,10 +242,9 @@
 
     .info-message {
         position: fixed;
-        top: 2vh;
+        top: 7vh;
         right: 2vw;
-        background-color: rgba(0, 128, 0, 0.9);
-        color: white;
+        background-color: var(--green);
         padding: 1vh 2vw;
         border-radius: 10px;
         box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
@@ -256,9 +255,8 @@
         animation: fadeIn 0.5s ease-in-out;
     }
 
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(-10px); }
-        to { opacity: 1; transform: translateY(0); }
+    .info-message p{
+        color: var(--white);
     }
 
     #filters{
