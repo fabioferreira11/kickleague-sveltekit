@@ -39,16 +39,16 @@
         { id: 'bfc', name: 'Boavista', imgSrc: 'boavistalogo.png' },
         { id: 'epf', name: 'Estoril', imgSrc: 'estorillogo.png' },
         { id: 'cpac', name: 'Casa pia', imgSrc: 'casapialogo.png' },
-        { id: 'gdc', name: 'Chaves', imgSrc: 'chaveslogo.png' },
+        { id: 'nac', name: 'Nacional', imgSrc: 'nacionallogo.png' },
         { id: 'scf', name: 'Farense', imgSrc: 'farenselogo.png' },
         { id: 'cfea', name: 'Estrela', imgSrc: 'estrelalogo.png' },
         { id: 'fcf', name: 'Famalicão', imgSrc: 'famalicaologo.png' },
         { id: 'mfc', name: 'Moreirense', imgSrc: 'moreirenselogo.png' },
-        { id: 'psc', name: 'Portimonense', imgSrc: 'portimonenselogo.png' },
+        { id: 'san', name: 'Santa Clara', imgSrc: 'santaClaralogo.png' },
         { id: 'gvfc', name: 'Gil Vicente', imgSrc: 'gilvicentelogo.png' },
         { id: 'rafc', name: 'Rio Ave', imgSrc: 'rioavelogo.png' },
         { id: 'vsc', name: 'Vitoria de Guimaraes', imgSrc: 'vitorialogo.png' },
-        { id: 'fcv', name: 'Vizela', imgSrc: 'vizelalogo.png' }
+        { id: 'avs', name: 'Avs', imgSrc: 'avslogo.png' }
     ];
 </script>
 

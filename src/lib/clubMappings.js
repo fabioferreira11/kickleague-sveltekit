@@ -9,16 +9,19 @@ const clubIds = {
     'bfc': 222,     // Boavista
     'epf': 230,     // Estoril
     'cpac': 4716,   // Casa pia
-    'gdc': 223,     // Chaves
+    // 'gdc': 223,     // Chaves
     'scf': 231,     // Farense
     'cfea': 15130,  // Estrela
     'fcf': 242,     // Famalicão
     'mfc': 215,     // Moreirense
-    'psc': 216,     // Portimonense
+    // 'psc': 216,     // Portimonense
     'gvfc': 762,    // Gil vicente
     'rafc': 226,    // Rio ave
     'vsc': 224,     // Vitoria de Guimaraes
-    'fcv': 810,     // Vizela
+    // 'fcv': 810,     // Vizela
+    'nac': 225,     // nacional
+    'san': 227,     // santa clara
+    'avs': 21595,   // avs
 };
 
 export default clubIds;
