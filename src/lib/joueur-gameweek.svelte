@@ -6,6 +6,9 @@
     import { onMount, createEventDispatcher } from 'svelte';
     import { getPlayerData } from '$lib/api'; // Importation de la fonction pour récupérer les données du joueur depuis l'API
 
+    // Définir la saison
+    const season = 2024;
+
     // Variable pour stocker les données du joueur, les informations de l'équipe du joueur et Création d'un dispatcher pour émettre des événements personnalisés
     let playerData = null; 
     let teamInfo = null; 
@@ -16,7 +19,7 @@
         if (playerId) {
             try {
                 // Récupérer les données du joueur via l'API
-                const fetchedData = await getPlayerData(playerId, new Date().getFullYear());
+                const fetchedData = await getPlayerData(playerId, season);
                 
                 if (fetchedData && fetchedData.player) {
                     playerData = fetchedData.player;
