@@ -4,6 +4,9 @@
     import { getCode } from 'country-list';
     import { clubs } from '$lib/clubs';
 
+    // Définir la saison comme 2024
+    const season = 2024;
+
     // Propriétés exportées permettant de passer des données au composant
     export let player; 
     console.log('Player data:', player);
@@ -36,7 +39,7 @@
     // Fonction pour récupérer les données du joueur à partir de l'API
     async function fetchData() {
         if (player && player.id) {
-            const data = await getPlayerData(player.id, new Date().getFullYear());
+            const data = await getPlayerData(player.id, season);
 
             // Vérification des données retournées par l'API
             if (!data) {
