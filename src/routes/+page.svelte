@@ -238,7 +238,7 @@
     .divimghero{
         width: 100%;
         height: 50vh;
-        background-image: url(/img/imgheroV2.jpg);
+        background-image: url(/img/imgheroV3.jpg);
         background-repeat: no-repeat;
         background-position: center;
         background-size: cover;
@@ -374,7 +374,7 @@
     }
 
     .home-section2{
-        background-image: url(/img/imgheroS1_V2.jpg);
+        background-image: url(/img/imgheroS1_V3.jpg);
         background-repeat: no-repeat;
         background-position: center;
         background-size: cover;

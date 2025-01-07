@@ -140,7 +140,7 @@
 
     p{
         width: 40%;
-        margin-bottom: 8vh;
+        margin-bottom: 7vh;
     }
 
     .choixpays{

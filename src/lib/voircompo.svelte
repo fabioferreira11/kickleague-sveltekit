@@ -1,6 +1,6 @@
 <script>
     export let rank = "standard"; // Rank par défaut du bouton
-    export let numero = "1"; // numero par défaut
+    export let numero = "20"; // numero par défaut
 
 </script>
   

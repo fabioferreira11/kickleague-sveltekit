@@ -155,12 +155,13 @@
     @media (min-width: 768px) {
     .choixclub-text{
         text-align: left;
-        padding: 3vh 0 3vh 3vw;
+        padding: 3vh 0 0vh 3vw;
     }
 
     .choixclub-text p{
         /* margin: 0 auto; */
         width: 40%;
+        margin-bottom: 7vh;
     }
 
     .choixclub{
