@@ -16,7 +16,7 @@ export const clubs = [
     { name: "Farense", shortName: "SCF" },
     { name: "Rio Ave", shortName: "RAFC" },
     { name: "Estrela", shortName: "CFEA" },
-    { name: "AVS", shortName: "AV" },
+    { name: "AVS", shortName: "AVS" },
     { name: "Nacional", shortName: "NAC" },
     { name: "Santa Clara", shortName: "SAN" }
 ];
