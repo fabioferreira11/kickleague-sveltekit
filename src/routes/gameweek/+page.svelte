@@ -110,7 +110,7 @@
         }
     });
 
-    export let numero = "1"; // Numéro de la semaine de match
+    export let numero = "20"; // Numéro de la semaine de match
 
     // Réinitialisation des points totaux à chaque chargement de la page
     totalPoints.set(0);
