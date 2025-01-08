@@ -7,7 +7,7 @@
     <section class="tournoi">
         <div class="type-tournoi">
             <div class="type-tournoi-info">
-                <p><b>Match Week {numero}</b></p>
+                <p><b>Game Week {numero}</b></p>
                 <p><b>Rank :</b>{rank} </p>
             </div>
             <a class="btn-tournoi" href="/gameweek">voir composition</a>

@@ -122,7 +122,7 @@
     <Header style="margin-top: 2vh;"/>
 {/if}
 <section class="gameweek-text">
-    <h2>Match week {numero}</h2>
+    <h2>Game week {numero}</h2>
     <p>Sur cette page, vous pouvez consulter et peaufiner la composition d'équipe que vous avez préparée pour la Match Week en cours. Avant le coup d'envoi, c'est l'endroit idéal pour apporter les ajustements nécessaires à votre formation. Assurez-vous que votre équipe est prête à briller sur le terrain.</p>
 </section>
 <section class="equipe-gameweek">
