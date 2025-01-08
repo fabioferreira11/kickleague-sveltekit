@@ -47,7 +47,7 @@
         { id: 'san', name: 'Santa Clara', imgSrc: 'santaClaralogo.png' },
         { id: 'gvfc', name: 'Gil Vicente', imgSrc: 'gilvicentelogo.png' },
         { id: 'rafc', name: 'Rio Ave', imgSrc: 'rioavelogo.png' },
-        { id: 'vsc', name: 'Vitoria de Guimaraes', imgSrc: 'vitorialogo.png' },
+        { id: 'vsc', name: 'Guimaraes', imgSrc: 'vitorialogo.png' },
         { id: 'avs', name: 'Avs', imgSrc: 'avslogo.png' }
     ];
 </script>
