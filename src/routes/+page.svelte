@@ -508,6 +508,10 @@
         padding: 0 3vw;
     }
 
+    .etape h3{
+        margin-top: 1vh;
+    }
+
     .objectif{
         height: 45vh;
         width: 100vw;

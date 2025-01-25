@@ -193,7 +193,7 @@
 
     .button{
         justify-content: flex-end;
-        padding-right: 4vw;
+        padding-right: 3vw;
     }
 
     .submit-button{
